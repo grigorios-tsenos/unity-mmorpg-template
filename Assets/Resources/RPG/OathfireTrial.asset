@@ -13,13 +13,7 @@ MonoBehaviour:
   m_Name: OathfireTrial
   m_EditorClassIdentifier: Quest.Runtime::MmoTemplate.Rpg.QuestData
   title: THE OATHFIRE TRIAL
-  briefing: 'Welcome, traveler. Our hearth grows cold, and the old vows must be renewed.
-
-
-    Defeat three guardians in the eastern proving circle and gather their Oathfire Embers. Face the warden, rekindle the brazier, then return to me.
-
-
-    Your companions share this trial. Each earns a reward.'
+  briefing: "Welcome, traveler. Our hearth grows cold, and the old vows must be renewed.\n\nDefeat three guardians in the eastern proving circle and gather their Oathfire Embers. Face the warden, rekindle the brazier, then return to me.\n\nReturn with the embers and earn the hearth\u2019s blessing."
   guardianKills: 3
   collectCount: 3
   collectItem: {fileID: 11400000, guid: f2f79fdaf46244279bf8072fa4a68fd5, type: 2}

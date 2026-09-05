@@ -51,17 +51,19 @@ namespace MmoTemplate.Rpg
                 var vr=(RectTransform)veil.transform;vr.anchorMin=Vector2.zero;vr.anchorMax=Vector2.one;vr.offsetMin=vr.offsetMax=Vector2.zero;
                 var fill=veil.GetComponent<Image>();fill.color=new Color(0,0,0,.65f);fill.raycastTarget=false;_cooldownFills[i]=fill;
                 _abilityLabels[i].transform.SetAsLastSibling();
-                button.onClick.AddListener(()=>{if(slot==5)_player?.DrinkPotionRpc();else _combat?.Use(slot);});
+                button.onClick.AddListener(()=>{if(slot==5)_player?.DrinkPotion();else _combat?.Use(slot);});
             }
-            var help=Label(root,"TAB target  ·  1 attack  ·  2–5 abilities  ·  6 potion  ·  E talk  ·  L quest log\nW/S move  ·  A/D turn (strafe with RMB)  ·  Q strafe left  ·  Space jump  ·  Mouse buttons orbit / steer",12,Parchment,new Vector2(-16,18),new Vector2(350,60),new Vector2(1,0),new Vector2(1,0));
+            _gameplayChrome.Add(actions.gameObject);
+            var help=Label(root,"TAB target  ·  1 attack  ·  2–5 abilities  ·  6 potion  ·  E talk  ·  L quest log\nW/S move  ·  A/D turn (strafe with RMB)  ·  Q/R strafe  ·  Space jump  ·  Mouse buttons orbit / steer",12,Parchment,new Vector2(-16,18),new Vector2(350,60),new Vector2(1,0),new Vector2(1,0));
             help.alignment=TextAnchor.LowerRight;
             var mode=Panel(root,new Vector2(280,42),new Vector2(16,-160),new Vector2(0,1),new Vector2(0,1));
             for(int i=0;i<3;i++)
             {
                 var kind=(ResourceType)i;var button=MakeButton(mode,kind.ToString());var r=(RectTransform)button.transform;
                 r.anchorMin=r.anchorMax=new Vector2(0,1);r.pivot=new Vector2(0,1);r.anchoredPosition=new Vector2(8+i*89,-6);r.sizeDelta=new Vector2(85,30);
-                button.onClick.AddListener(()=>_player?.ChangeResourceRpc(kind));
+                button.onClick.AddListener(()=>_player?.ChangeResource(kind));
             }
+            _gameplayChrome.Add(mode.gameObject);
             var journal=Panel(root,new Vector2(500,360),Vector2.zero,new Vector2(.5f,.5f),new Vector2(.5f,.5f));
             _journal=journal.gameObject;journal.GetComponent<Image>().color=new Color(.77f,.68f,.49f,.98f);
             Label(journal,"QUEST LOG   ·   THE OATHFIRE TRIAL",20,new Color(.23f,.13f,.06f),new Vector2(24,-24),new Vector2(450,32));

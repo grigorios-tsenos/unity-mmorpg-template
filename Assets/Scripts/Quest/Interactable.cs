@@ -1,22 +1,19 @@
-using Unity.Netcode;
 using UnityEngine;
 namespace MmoTemplate.Rpg
 {
     public enum InteractableKind { QuestGiver, Merchant, Brazier }
-    public class Interactable : NetworkBehaviour, IInteraction
+    public class Interactable : InteractionPoint
     {
         [SerializeField] private InteractableKind kind;
         [SerializeField] private string displayName="Mira", prompt="Speak to Mira";
         public InteractableKind Kind=>kind;
         public string DisplayName=>displayName;
-        public string Prompt=>prompt;
+        public override string Prompt=>prompt;
         private ItemData potion;
         private void Awake()=>potion=Resources.Load<ItemData>("RPG/HealingPotion");
-        public override void OnNetworkSpawn()=>InteractionRegistry.All.Add(this);
-        public override void OnNetworkDespawn()=>InteractionRegistry.All.Remove(this);
-        public void Interact(PlayerStats player)
+        public override void Interact(PlayerStats player)
         {
-            if(!IsServer || player==null) return;
+            if(player==null) return;
             var quest=QuestManager.Instance; if(quest==null || quest.Definition==null) return;
             int stage=quest.Stage.Value;
             if(kind==InteractableKind.Merchant)
@@ -30,13 +27,13 @@ namespace MmoTemplate.Rpg
             }
             if(stage==0 || stage==5)
                 player.Dialogue.SendDialog(displayName+" · Keeper of the Oathfire",quest.Definition.briefing,new[]{stage==5 ? "Repeat the trial" : "Accept quest","Rest at the hearth","Farewell"},new[]{0,3,-1});
-            else if(stage==4 && quest.Participants.Contains(player.OwnerClientId) && !quest.HasClaimed(player))
+            else if(stage==4 && !quest.HasClaimed(player))
                 player.Dialogue.SendDialog(displayName+" · Quest complete",$"You have earned the hearth's blessing.\n\nRewards: {quest.Definition.rewardCopper} copper · {quest.Definition.rewardXp} XP\n{quest.Definition.rewardPotions} healing potions · {quest.Definition.rewardItem.displayName}",new[]{"Complete quest","Later"},new[]{1,-1});
             else player.Dialogue.SendDialog(displayName+" · The trial",quest.Objective()+"\n\nTab selects a foe. [1] toggles your weapon. [2–5] use abilities.\n[6] drinks a potion. Space jumps.",new[]{"Rest at the hearth","Continue"},new[]{3,-1});
         }
-        public bool Choose(PlayerStats player,int action)
+        public override bool Choose(PlayerStats player,int action)
         {
-            if(!IsServer || player==null || player.IsDead) return false;
+            if(player==null || player.IsDead) return false;
             var quest=QuestManager.Instance;
             if(kind==InteractableKind.QuestGiver)
             {

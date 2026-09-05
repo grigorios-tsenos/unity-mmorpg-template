@@ -1,30 +1,13 @@
 #if UNITY_EDITOR
-using MmoTemplate.Network;
 using MmoTemplate.Player;
 using MmoTemplate.Rpg;
-using Unity.Netcode;
-using Unity.Netcode.Components;
-using Unity.Netcode.Transports.UTP;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-// / <summary>
-// / One-click scaffolding for the MMORPG template: builds a Player prefab and
-// / the Bootstrap/World scenes with everything wired (NetworkManager, UI,
-// / script references), then registers both scenes in Build Settings.
-// /
-// / This exists because Unity scenes/prefabs are Editor-managed assets that
-// / can't be hand-authored as plain text the way the rest of this template's
-// / scripts are — so we build them once, here, instead of asking you to wire
-// / a dozen Inspector references by hand.
-// /
-// / Run it from the menu: MMORPG Template ▸ Build Playable Scenes.
-// / Safe to re-run — it overwrites Bootstrap.unity, World.unity and
-// / Player.prefab each time.
-// / </summary>
+/// <summary>Rebuilds the authored single-player chamber and its two character prefabs.</summary>
 public static class SceneBuilder
 {
     private const string ScenesDir = "Assets/Scenes";
@@ -32,7 +15,7 @@ public static class SceneBuilder
     private const string PlayerPrefabPath = PrefabsDir + "/Player.prefab";
     private const string MaterialsDir = "Assets/Materials";
 
-    [MenuItem("MMORPG Template/Build Playable Scenes")]
+    [MenuItem("Azeroth04/Build Oathfire Room")]
     public static void Build()
     {
         System.IO.Directory.CreateDirectory(ScenesDir);
@@ -41,25 +24,18 @@ public static class SceneBuilder
         ClassicContentBuilder.Build();
         GameObject playerPrefab = BuildPlayerPrefab();
         GameObject enemyPrefab = BuildEnemyPrefab();
-        BuildBootstrapScene(playerPrefab, enemyPrefab);
-        BuildWorldScene(enemyPrefab);
+
+        BuildWorldScene(playerPrefab, enemyPrefab);
 
         EditorBuildSettings.scenes = new[]
         {
-            new EditorBuildSettingsScene($"{ScenesDir}/Bootstrap.unity", true),
             new EditorBuildSettingsScene($"{ScenesDir}/World.unity", true),
         };
 
-        EditorSceneManager.OpenScene($"{ScenesDir}/Bootstrap.unity");
+        EditorSceneManager.OpenScene($"{ScenesDir}/World.unity");
         AssetDatabase.SaveAssets();
 
-        if (!Application.isBatchMode) EditorUtility.DisplayDialog(
-            "MMORPG Template",
-            "Player prefab and both scenes are built and added to Build Settings.\n\n" +
-            "Press Play in Bootstrap.unity, then click \"Host + Play\".\n\n" +
-            "To test with a second player: Window ▸ Multiplayer Play Mode ▸ " +
-            "Add Virtual Player, then Play again and click \"Join\" (127.0.0.1).",
-            "Got it");
+        if (!Application.isBatchMode) EditorUtility.DisplayDialog("The Oathfire Chamber", "The single-player room is ready. Press Play to explore.", "Enter");
     }
 
     // ------------------------------------------------------------------
@@ -95,14 +71,14 @@ public static class SceneBuilder
             visual.GetComponent<MeshRenderer>().sharedMaterial = MakeMaterial(new Color(0.85f, 0.85f, 0.9f));
         }
 
-        go.AddComponent<NetworkObject>();
-        go.AddComponent<NetworkTransform>();
-        go.AddComponent<PlayerController>();
         go.AddComponent<PlayerStats>();
+        go.AddComponent<PlayerController>();
         go.AddComponent<PlayerCombat>();
+        go.AddComponent<CharacterVisual>();
         go.layer = 2;
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(go, PlayerPrefabPath);
+        PrefabUtility.SavePrefabAsset(prefab);
         Object.DestroyImmediate(go);
         return prefab;
     }
@@ -139,11 +115,11 @@ public static class SceneBuilder
         capsule.height = 2f;
         capsule.radius = 0.45f;
 
-        go.AddComponent<NetworkObject>();
-        go.AddComponent<NetworkTransform>();
         go.AddComponent<Enemy>();
+        go.AddComponent<CharacterVisual>();
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabsDir + "/Guardian.prefab");
+        PrefabUtility.SavePrefabAsset(prefab);
         Object.DestroyImmediate(go);
         return prefab;
     }
@@ -152,58 +128,7 @@ public static class SceneBuilder
     // Bootstrap.unity — login / connect screen
     // ------------------------------------------------------------------
 
-    private static void BuildBootstrapScene(GameObject playerPrefab, GameObject enemyPrefab)
-    {
-        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-
-        var camGo = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
-        camGo.tag = "MainCamera";
-        camGo.transform.position = new Vector3(0, 1, -5);
-
-        var netGo = new GameObject("NetworkManager");
-        var nm = netGo.AddComponent<NetworkManager>();
-        var transport = netGo.AddComponent<UnityTransport>();
-        nm.NetworkConfig.NetworkTransport = transport;
-        nm.NetworkConfig.PlayerPrefab = playerPrefab;
-        nm.NetworkConfig.ConnectionApproval = false;
-        if (enemyPrefab != null)
-            nm.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = enemyPrefab });
-        nm.NetworkConfig.EnableSceneManagement = true; // server drives scene loads, keeps in-scene NetworkObjects in sync
-
-        MakeEventSystem();
-        var canvas = MakeCanvas("BootstrapCanvas");
-        var panel = MakePanel(canvas.transform, new Vector2(420, 370));
-
-        MakeText(panel.transform, "Title", "AZEROTH · THE OATHFIRE", 22, TextAnchor.MiddleCenter);
-        var nameField = MakeInputField(panel.transform, "NameField", "Character name");
-        var addressField = MakeInputField(panel.transform, "AddressField", "Server address");
-        var portField = MakeInputField(panel.transform, "PortField", "Port");
-        var hostButton = MakeButton(panel.transform, "HostButton", "Enter the world · Solo / Host");
-        var joinButton = MakeButton(panel.transform, "JoinButton", "Join");
-        var dedicatedButton = MakeButton(panel.transform, "DedicatedButton", "Start Dedicated Server");
-        var status = MakeText(panel.transform, "Status", "", 14, TextAnchor.MiddleCenter);
-
-        var bootGo = new GameObject("Bootstrap");
-        var boot = bootGo.AddComponent<NetworkBootstrap>();
-        var so = new SerializedObject(boot);
-        so.FindProperty("nameField").objectReferenceValue = nameField;
-        so.FindProperty("addressField").objectReferenceValue = addressField;
-        so.FindProperty("portField").objectReferenceValue = portField;
-        so.FindProperty("hostButton").objectReferenceValue = hostButton;
-        so.FindProperty("joinButton").objectReferenceValue = joinButton;
-        so.FindProperty("dedicatedButton").objectReferenceValue = dedicatedButton;
-        so.FindProperty("statusLabel").objectReferenceValue = status;
-        so.FindProperty("worldSceneName").stringValue = "World";
-        so.ApplyModifiedPropertiesWithoutUndo();
-
-        EditorSceneManager.SaveScene(scene, $"{ScenesDir}/Bootstrap.unity");
-    }
-
-    // ------------------------------------------------------------------
-    // World.unity — the actual play space
-    // ------------------------------------------------------------------
-
-    private static void BuildWorldScene(GameObject enemyPrefab)
+    private static void BuildWorldScene(GameObject playerPrefab, GameObject enemyPrefab)
     {
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -230,15 +155,10 @@ public static class SceneBuilder
         camGo.transform.position = new Vector3(0, 6, -7);
         camGo.transform.rotation = Quaternion.Euler(35f, 0f, 0f);
 
-        // Managers. QuestManager and ChatRelay are NetworkBehaviours, so they
-        // need a NetworkObject; as in-scene objects they're spawned for everyone
-        // by Netcode's scene management.
+        // Local quest and encounter services.
         var gm = new GameObject("GameManager");
-        gm.AddComponent<PlayerSpawner>();
-        gm.AddComponent<NetworkObject>();
         var spawner = gm.AddComponent<EnemySpawner>();
         var quest = gm.AddComponent<QuestManager>();
-        gm.AddComponent<ChatRelay>();
 
         var spawnerSo = new SerializedObject(spawner);
         spawnerSo.FindProperty("enemyPrefab").objectReferenceValue = enemyPrefab;
@@ -253,8 +173,16 @@ public static class SceneBuilder
         new GameObject("RpgHud").AddComponent<RpgHud>();
 
         BuildScenery();
+        var player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab);
+        player.transform.SetPositionAndRotation(new Vector3(-2, .2f, 4), Quaternion.Euler(0,180,0));
+        var camera = camGo.GetComponent<Camera>();
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(.07f,.085f,.11f);
+        camera.fieldOfView = 58;
+        new GameObject("Chamber ambience").AddComponent<ChamberAmbience>();
 
         EditorSceneManager.SaveScene(scene, $"{ScenesDir}/World.unity");
+
     }
 
     // ------------------------------------------------------------------
@@ -338,6 +266,8 @@ public static class SceneBuilder
         var toma = Art(room.transform, "Characters/toma", new Vector3(-6.2f, 0, -2.6f), 20f);
         MakeInteractable(toma, InteractableKind.Merchant, "Toma", "Trade with Toma");
 
+        BuildProvingCircle(room.transform);
+
         // The Oathfire brazier at the back of the hall.
         var brazier = new GameObject("Oathfire");
         brazier.transform.SetParent(room.transform, false);
@@ -360,6 +290,7 @@ public static class SceneBuilder
 
         WarmLight(brazier.transform, new Vector3(0, 1.6f, -6.1f), 1.6f, 9f);
         MakeInteractable(brazier, InteractableKind.Brazier, "The Oathfire", "Rekindle the Oathfire");
+        brazier.AddComponent<OathfireVisual>();
 
         // Moonlight through the arched windows.
         var moon = new GameObject("Moonlight", typeof(Light));
@@ -375,14 +306,13 @@ public static class SceneBuilder
         moon.transform.LookAt(new Vector3(2, 0, 1));
     }
 
-    /// <summary>Turns a scene object into an E-to-interact NPC/object. Needs a
-    /// NetworkObject because the server addresses it by NetworkObjectId.</summary>
+    /// <summary>Adds a local interaction and its presentation to a room prop.</summary>
     private static void MakeInteractable(GameObject go, InteractableKind kind, string displayName, string prompt)
     {
-        if (go == null) return;
+        if (go == null) throw new System.InvalidOperationException("A required chamber art asset failed to import.");
         go.layer = 2;
-        go.AddComponent<NetworkObject>();
         go.AddComponent<QuestMarker>();
+        go.AddComponent<CharacterVisual>();
         var interactable = go.AddComponent<Interactable>();
         var so = new SerializedObject(interactable);
         so.FindProperty("kind").enumValueIndex = (int)kind;
@@ -395,7 +325,7 @@ public static class SceneBuilder
     private static GameObject Art(Transform parent, string artPath, Vector3 pos, float yaw = 0f)
     {
         var asset = LoadArt(artPath);
-        if (asset == null) return null;
+        if (asset == null) throw new System.InvalidOperationException("Missing art asset: " + artPath);
         var go = (GameObject)PrefabUtility.InstantiatePrefab(asset);
         go.transform.SetParent(parent, false);
         go.transform.position = pos;
@@ -418,16 +348,36 @@ public static class SceneBuilder
                 var converted = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (converted == null)
                 {
-                    converted = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                    converted = new Material(Shader.Find("Universal Render Pipeline/Simple Lit"));
                     converted.color = source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor") : source.color;
                     Texture texture = source.HasProperty("_BaseMap") ? source.GetTexture("_BaseMap") : source.mainTexture;
                     if (texture != null) converted.SetTexture("_BaseMap", texture);
                     System.IO.Directory.CreateDirectory(MaterialsDir);
                     AssetDatabase.CreateAsset(converted, path);
                 }
+                converted.shader = Shader.Find("Universal Render Pipeline/Simple Lit");
+                converted.SetFloat("_SpecularHighlights", 0);
+                converted.DisableKeyword("_SPECGLOSSMAP");
+                var diffuse = ClassicTextureImporter.Diffuse(source);
+                if (diffuse != null) converted.SetTexture("_BaseMap", diffuse);
+                EditorUtility.SetDirty(converted);
                 materials[i] = converted;
             }
             renderer.sharedMaterials = materials;
+        }
+    }
+
+
+    private static void BuildProvingCircle(Transform parent)
+    {
+        var ring=new GameObject("Eastern proving circle");ring.transform.SetParent(parent,false);ring.transform.position=new Vector3(4.8f,.035f,-1.5f);
+        var line=ring.AddComponent<LineRenderer>();line.useWorldSpace=false;line.loop=true;line.positionCount=64;line.widthMultiplier=.07f;
+        line.sharedMaterial=MakeMaterial(new Color(.55f,.39f,.16f));
+        for(int i=0;i<64;i++){float angle=i*Mathf.PI*2/64;line.SetPosition(i,new Vector3(Mathf.Cos(angle)*2.6f,0,Mathf.Sin(angle)*2.6f));}
+        foreach(float x in new[]{2f,7.6f})
+        {
+            Art(parent,"Props/pillar_decorated",new Vector3(x,0,-5.8f));
+            Art(parent,"Props/banner_patternA_red",new Vector3(x,2,-5.65f));
         }
     }
 
@@ -447,7 +397,7 @@ public static class SceneBuilder
 
     private static void WarmLight(Transform parent, Vector3 pos, float intensity, float range)
     {
-        var go = new GameObject("TorchLight", typeof(Light));
+        var go = new GameObject("TorchLight", typeof(Light), typeof(TorchFlicker));
         go.transform.SetParent(parent, false);
         go.transform.position = pos;
         var l = go.GetComponent<Light>();
@@ -466,138 +416,12 @@ public static class SceneBuilder
         string path = $"{MaterialsDir}/{name}.mat";
 
         var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (existing != null) { existing.shader = Shader.Find("Universal Render Pipeline/Unlit"); existing.color = color; EditorUtility.SetDirty(existing); return existing; }
+        if (existing != null) { existing.shader = Shader.Find("Universal Render Pipeline/Simple Lit"); existing.color = color; EditorUtility.SetDirty(existing); return existing; }
 
-        var mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = color };
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Simple Lit")) { color = color };
         AssetDatabase.CreateAsset(mat, path);
         return mat;
     }
 
-    // ------------------------------------------------------------------
-    // UI helpers
-    // ------------------------------------------------------------------
-
-    private static Canvas MakeCanvas(string name)
-    {
-        var go = new GameObject(name, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-        var canvas = go.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        var scaler = go.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1280, 720);
-        return canvas;
-    }
-
-    private static void MakeEventSystem()
-    {
-        if (Object.FindAnyObjectByType<EventSystem>() != null) return;
-        new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-    }
-
-    private static GameObject MakePanel(Transform parent, Vector2 size)
-    {
-        var go = new GameObject("Panel", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
-        go.transform.SetParent(parent, false);
-        var rt = go.GetComponent<RectTransform>();
-        rt.sizeDelta = size;
-        rt.anchoredPosition = Vector2.zero;
-        go.GetComponent<Image>().color = new Color(0.08f, 0.08f, 0.1f, 0.92f);
-
-        var v = go.GetComponent<VerticalLayoutGroup>();
-        v.padding = new RectOffset(18, 18, 18, 18);
-        v.spacing = 10;
-        v.childControlHeight = false;
-        v.childControlWidth = true;
-        v.childForceExpandHeight = false;
-        v.childForceExpandWidth = true;
-        return go;
-    }
-
-    private static GameObject MakeCornerPanel(Transform parent, Vector2 size)
-    {
-        var go = MakePanel(parent, size);
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.zero;
-        rt.pivot = Vector2.zero;
-        rt.anchoredPosition = new Vector2(20, 20);
-        var v = go.GetComponent<VerticalLayoutGroup>();
-        v.childForceExpandHeight = true;
-        return go;
-    }
-
-    private static Text MakeText(Transform parent, string name, string value, int fontSize, TextAnchor alignment)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(LayoutElement));
-        go.transform.SetParent(parent, false);
-        var t = go.GetComponent<Text>();
-        t.text = value;
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        t.fontSize = fontSize;
-        t.color = Color.white;
-        t.alignment = alignment;
-        go.GetComponent<LayoutElement>().minHeight = fontSize + 10;
-        return t;
-    }
-
-    private static InputField MakeInputField(Transform parent, string name, string placeholder)
-    {
-        // InputField is added LAST (below): adding it up front makes it cache a
-        // null textComponent in OnEnable and render incorrectly.
-        var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(LayoutElement));
-        go.transform.SetParent(parent, false);
-        go.GetComponent<Image>().color = new Color(1, 1, 1, 0.08f);
-        go.GetComponent<LayoutElement>().minHeight = 32;
-
-        var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
-        textGo.transform.SetParent(go.transform, false);
-        var text = textGo.GetComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.color = Color.white;
-        text.supportRichText = false;
-        StretchFull(textGo.GetComponent<RectTransform>(), 6);
-
-        var placeholderGo = new GameObject("Placeholder", typeof(RectTransform), typeof(Text));
-        placeholderGo.transform.SetParent(go.transform, false);
-        var placeholderText = placeholderGo.GetComponent<Text>();
-        placeholderText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        placeholderText.text = placeholder;
-        placeholderText.fontStyle = FontStyle.Italic;
-        placeholderText.color = new Color(1, 1, 1, 0.4f);
-        StretchFull(placeholderGo.GetComponent<RectTransform>(), 6);
-
-        var field = go.AddComponent<InputField>();
-        field.textComponent = text;
-        field.placeholder = placeholderText;
-        field.targetGraphic = go.GetComponent<Image>();
-        return field;
-    }
-
-    private static Button MakeButton(Transform parent, string name, string label)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
-        go.transform.SetParent(parent, false);
-        go.GetComponent<Image>().color = new Color(0.25f, 0.35f, 0.55f, 1f);
-        go.GetComponent<LayoutElement>().minHeight = 36;
-
-        var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
-        textGo.transform.SetParent(go.transform, false);
-        var text = textGo.GetComponent<Text>();
-        text.text = label;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = Color.white;
-        StretchFull(textGo.GetComponent<RectTransform>(), 0);
-
-        return go.GetComponent<Button>();
-    }
-
-    private static void StretchFull(RectTransform rt, float pad)
-    {
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = new Vector2(pad, pad);
-        rt.offsetMax = new Vector2(-pad, -pad);
-    }
 }
 #endif
