@@ -1,5 +1,15 @@
 # Unity MMORPG Template
 
+> **Working on this project?** Read **[AGENTS.md](AGENTS.md)** first — it is the
+> contract every agent (Claude Code, Codex) and human follows here. The
+> specifications live in **[docs/](docs/README.md)**; the live state of play is
+> **[docs/05-STATUS.md](docs/05-STATUS.md)**.
+>
+> This README describes the original networking scaffold. Parts of the "one-time
+> setup" below are now automated by *MMORPG Template ▸ Build Playable Scenes*
+> (`Assets/Editor/SceneBuilder.cs`) — see
+> [docs/01-ARCHITECTURE.md](docs/01-ARCHITECTURE.md) §6.
+
 A fresh Unity project scaffold using **Netcode for GameObjects (NGO)** — Unity's
 official multiplayer solution — wired the same way as this repo's Godot MMORPG
 template: an **authoritative server**, replicated player transforms, RPC-driven
