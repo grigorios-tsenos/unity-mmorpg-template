@@ -80,7 +80,7 @@ namespace MmoTemplate.Rpg
             BuildQuestTracker(root);
             BuildPrompt(root);
             BuildToast(root);
-            BuildChat(root);
+            BuildJournalFeed(root);
             BuildDialog(root);
             BuildClassicChrome(root);
         }
@@ -124,7 +124,7 @@ namespace MmoTemplate.Rpg
             _toastText.alignment = TextAnchor.MiddleCenter;
         }
 
-        private void BuildChat(RectTransform root)
+        private void BuildJournalFeed(RectTransform root)
         {
             var panel = Panel(root, new Vector2(360, 168), new Vector2(16, 16),
                 new Vector2(0, 0), new Vector2(0, 0));
@@ -133,35 +133,8 @@ namespace MmoTemplate.Rpg
             _chatLog = Label(panel, "", 13, Ink, new Vector2(12, -10), new Vector2(336, 116));
             _chatLog.alignment = TextAnchor.LowerLeft;
 
-            // NOTE: the InputField component is added LAST, after its text and
-            // placeholder children exist — adding it first makes it cache null
-            // references in OnEnable and render incorrectly.
-            var fieldGo = new GameObject("ChatInput", typeof(RectTransform), typeof(Image));
-            fieldGo.transform.SetParent(panel, false);
-            var frt = (RectTransform)fieldGo.transform;
-            frt.anchorMin = new Vector2(0, 0);
-            frt.anchorMax = new Vector2(0, 0);
-            frt.pivot = new Vector2(0, 0);
-            frt.anchoredPosition = new Vector2(12, 12);
-            frt.sizeDelta = new Vector2(336, 26);
-            fieldGo.GetComponent<Image>().color = new Color(1, 1, 1, 0.07f);
-
-            var textC = Label((RectTransform)fieldGo.transform, "", 13, Ink, Vector2.zero, Vector2.zero);
-            Stretch((RectTransform)textC.transform, 6);
-            textC.supportRichText = false;
-            textC.alignment = TextAnchor.MiddleLeft;
-
-            var placeholder = Label((RectTransform)fieldGo.transform, "Press Enter to chat…", 13,
-                new Color(1, 1, 1, 0.35f), Vector2.zero, Vector2.zero);
-            Stretch((RectTransform)placeholder.transform, 6);
-            placeholder.fontStyle = FontStyle.Italic;
-            placeholder.alignment = TextAnchor.MiddleLeft;
-
-            _chatInput = fieldGo.AddComponent<InputField>();
-            _chatInput.textComponent = textC;
-            _chatInput.placeholder = placeholder;
-            _chatInput.targetGraphic = fieldGo.GetComponent<Image>();
-            _chatInput.onSubmit.AddListener(OnChatSubmit); // runtime listener: fine, we're not serialising
+            Label(panel, "ADVENTURE LOG", 12, Parchment, new Vector2(12,-8), new Vector2(336,18));
+            _chatLog.rectTransform.anchoredPosition = new Vector2(12,-30);
         }
 
         private void BuildDialog(RectTransform root)
@@ -186,7 +159,7 @@ namespace MmoTemplate.Rpg
             vlg.spacing = 6;
             vlg.childControlWidth = true;
             vlg.childForceExpandWidth = true;
-            vlg.childControlHeight = false;
+            vlg.childControlHeight = true;
             vlg.childForceExpandHeight = false;
             vlg.childAlignment = TextAnchor.LowerCenter;
 
@@ -222,11 +195,18 @@ namespace MmoTemplate.Rpg
         /// so nothing overlaps the text or the choice buttons.</summary>
         public void ShowDialog(string title, string body, params (string label, Action action)[] options)
         {
+            _dialogPanel.SetActive(true);
             _dialogTitle.text = title;
-            BeginTyping(body);
+            // Full text first: the panel is measured against the finished reply, so it does not
+            // grow line by line while the typewriter runs.
+            _dialogBody.text = body;
 
             for (int i = _choiceHolder.childCount - 1; i >= 0; i--)
-                Destroy(_choiceHolder.GetChild(i).gameObject);
+            {
+                var child = _choiceHolder.GetChild(i);
+                child.SetParent(null, false);
+                Destroy(child.gameObject);
+            }
 
             foreach (var (label, action) in options)
             {
@@ -235,9 +215,31 @@ namespace MmoTemplate.Rpg
                 b.onClick.AddListener(() => captured?.Invoke());
             }
 
-            _dialogPanel.SetActive(true);
+            LayoutDialog(options.Length);
+            BeginTyping(body);
             GameEvents.InputBlocked = true;
             SetChromeVisible(false);
+        }
+
+        /// <summary>Grows the frame to fit the reply and the choices. A fixed 320px box could not
+        /// hold three buttons, so they spilled out through the bottom edge.</summary>
+        private void LayoutDialog(int choiceCount)
+        {
+            const float width = 620, pad = 24, titleTop = 20, titleHeight = 28;
+            const float bodyGap = 8, choiceGap = 16, choiceHeight = 38, spacing = 6, bottom = 20;
+            float inner = width - pad * 2;
+            float choices = choiceCount * choiceHeight + Mathf.Max(0, choiceCount - 1) * spacing;
+            _choiceHolder.sizeDelta = new Vector2(inner, choices);
+
+            float bodyTop = titleTop + titleHeight + bodyGap;
+            var bodyRect = _dialogBody.rectTransform;
+            bodyRect.sizeDelta = new Vector2(inner, bodyRect.sizeDelta.y);   // fix the wrap width before measuring
+            float bodyHeight = Mathf.Max(60, _dialogBody.preferredHeight);
+            bodyRect.anchoredPosition = new Vector2(pad, -bodyTop);
+            bodyRect.sizeDelta = new Vector2(inner, bodyHeight);
+
+            ((RectTransform)_dialogPanel.transform).sizeDelta =
+                new Vector2(width, bodyTop + bodyHeight + choiceGap + choices + bottom);
         }
 
         public void Close()
@@ -278,7 +280,8 @@ namespace MmoTemplate.Rpg
         {
             UpdateClassicChrome();
             GameEvents.InputBlocked = InputBlocked;
-            if (Input.GetKeyDown(KeyCode.Escape)) { Close(); _journal.SetActive(false); _chatInput.DeactivateInputField(); }
+            GameEvents.PointerOverUi = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            if (Input.GetKeyDown(KeyCode.Escape)) { Close(); _journal.SetActive(false);  }
             if (Input.GetKeyDown(KeyCode.L) && !ChatFocused && !DialogOpen) _journal.SetActive(!_journal.activeSelf);
             if (_toastTimer > 0)
             {
@@ -286,21 +289,6 @@ namespace MmoTemplate.Rpg
                 if (_toastTimer <= 0 && _toastText != null) _toastText.text = "";
             }
 
-            // Enter focuses chat when it isn't already focused.
-            if (!DialogOpen && !ChatFocused && Input.GetKeyDown(KeyCode.Return))
-            {
-                _chatInput.Select();
-                _chatInput.ActivateInputField();
-            }
-        }
-
-        private void OnChatSubmit(string text)
-        {
-            text = text?.Trim();
-            _chatInput.text = "";
-            if (string.IsNullOrEmpty(text)) return;
-            ChatRelay.Instance?.Send(text);
-            _chatInput.DeactivateInputField();
         }
 
         // ------------------------------------------------------------------
@@ -389,7 +377,9 @@ namespace MmoTemplate.Rpg
             var go = new GameObject("Choice", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
             go.transform.SetParent(parent, false);
             go.GetComponent<Image>().color = new Color(0.21f, 0.20f, 0.16f, 1f);
-            go.GetComponent<LayoutElement>().minHeight = 32;
+            var layout = go.GetComponent<LayoutElement>();
+            layout.minHeight = 32;
+            layout.preferredHeight = 38;
 
             var t = Label((RectTransform)go.transform, label, 15, Parchment, Vector2.zero, Vector2.zero);
             Stretch((RectTransform)t.transform, 0);

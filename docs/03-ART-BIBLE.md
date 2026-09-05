@@ -10,7 +10,8 @@ contrast, readable at a distance, running on 2004 hardware.
 
 ## 1. Materials and shading
 
-**Allowed:** `Universal Render Pipeline/Unlit` and `Universal Render Pipeline/Simple Lit`.
+**Allowed:** `Universal Render Pipeline/Simple Lit` (the current default, with
+specular highlights disabled) and `Universal Render Pipeline/Unlit`.
 
 **Forbidden:** Lit/PBR shaders, metallic, smoothness, normal maps, height maps,
 occlusion maps, emission maps, subsurface scattering, clear coat, parallax, screen
@@ -22,8 +23,9 @@ The scene lights exist for mood and localised warmth (torches, the brazier, moon
 never as the primary source of form.
 
 `SceneBuilder.ApplyClassicMaterials` already enforces this: every imported glb
-material is converted to a cached `Classic_<guid>_<localid>.mat` on the URP/Unlit
-shader, keeping only base colour and base map. Do not bypass it.
+material is converted to a cached `Classic_<guid>_<localid>.mat`, keeping only base
+colour and base map. `ClassicTextureImporter` (driven by `ClassicTextureMap.json`)
+caps extracted diffuse textures at 1024 px on import. Do not bypass either.
 
 ## 2. Textures
 
@@ -82,9 +84,14 @@ aesthetic rules:
 
 ## 7. Audio
 
-- Sampled orchestral and folk instrumentation; short, dry, punchy combat impacts.
-- 22–44 kHz mono for effects, stereo only for music and ambience.
-- Every player action makes a sound. Silence reads as a bug.
+The room's ambience is **generated procedurally at runtime** by `ChamberAmbience` —
+no audio files ship with the project, deliberately. Keep it that way unless a
+`DECISIONS.md` entry says otherwise; it avoids a licensing surface for a hobby
+project and keeps the repo small.
+
+- Short, dry, punchy combat impacts; nothing reverberant or cinematic.
+- 22 kHz mono is correct and period-accurate for effects.
+- Every player action should make a sound. Silence reads as a bug.
 
 ## 8. Licensing
 

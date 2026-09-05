@@ -11,9 +11,10 @@ rules you may never break, and where the real specifications live.
 ## 0. What this project is
 
 A 3D action RPG in Unity 6 (URP) that replicates the mechanics, UI paradigms, and
-artistic feel of 2004 *World of Warcraft* (Vanilla / patch 1.12). It runs
-single-player or over LAN on an authoritative server built with Netcode for
-GameObjects.
+artistic feel of 2004 *World of Warcraft* (Vanilla / patch 1.12). It is currently
+**single-player**: one scene, one room, no networking. The former Netcode layer is
+preserved for reference in `Archive/Networking/`, outside `Assets/`, and is not part
+of the game.
 
 We build it **room by room and mechanic by mechanic**. One space is finished to a
 shippable standard before the next is started. One mechanic is perfected before the
@@ -65,8 +66,8 @@ These are violations, not preferences. A change that breaks one of these is reje
 regardless of how well it works.
 
 ### 3.1 Scenes and prefabs are generated, never hand-edited
-`Assets/Scenes/*.unity` and `Assets/Prefabs/*.prefab` are **build outputs** of
-`Assets/Editor/SceneBuilder.cs`. `Assets/Resources/RPG/*.asset` are build outputs of
+`Assets/Scenes/World.unity` and `Assets/Prefabs/*.prefab` are **build outputs** of
+`Assets/Editor/SceneBuilder.cs` (menu: *Azeroth04 ▸ Build Oathfire Room*). `Assets/Resources/RPG/*.asset` are build outputs of
 `Assets/Editor/ClassicContentBuilder.cs`.
 
 - To change the world, edit `SceneBuilder.cs` and re-run the builder.
@@ -75,15 +76,19 @@ regardless of how well it works.
   Inspector reference that a builder could set.
 - Re-running the builders must be idempotent and must not lose authored data.
 
-### 3.2 The server is the only authority
-Clients send intent; the server decides outcomes; results replicate back.
+### 3.2 Gameplay owns state; presentation only reads it
+There is no server and no client. Gameplay systems own their state and expose it as
+`ObservableValue<T>`, which notifies only on change.
 
-- Damage, healing, resource spend, loot, quest state, and item grants happen on the
-  server only — guard every one with `if (!IsServer) return;`.
-- Every `[Rpc(SendTo.Server)]` must validate: sender permission, argument range,
-  `float.IsFinite`, distance/line-of-sight, cooldown, and resource availability.
-  Assume the client is lying.
-- Client-side prediction is presentation only and must never mutate authoritative state.
+- Damage, healing, resource spend, loot, quest state, and item grants are decided by
+  the gameplay system that owns them — never by a UI script or an animation callback.
+- Validation still belongs at the entry point of every action: range, line of sight,
+  cooldown, GCD, resource availability, and whether the action was actually offered.
+  `PlayerCombat.ChooseAction` consuming a whitelist of offered dialogue IDs is the
+  pattern to follow — it is what stops a stray call granting a reward.
+- **Do not reintroduce `Unity.Netcode` types into `Assets/`.** Multiplayer is out of
+  scope until Phase 4 at the earliest; if it returns, it is a deliberate decision with
+  a `DECISIONS.md` entry, not a side effect of someone's change.
 
 ### 3.3 Gameplay never references UI
 `Core.Runtime`, `Combat.Runtime`, and `Quest.Runtime` must not reference
@@ -117,8 +122,8 @@ refactors are the main way a room-by-room plan turns into a broken game.
 - **Unity 6000.6.0f1** (URP). The installed editor is at
   `/Applications/Unity/Hub/Editor/6000.6.0f1`.
 - **C# 9+**, .NET Standard 2.1 profile.
-- **Netcode for GameObjects 2.x** — use the modern `[Rpc(SendTo.…)]` attributes,
-  never the deprecated `ServerRpc`/`ClientRpc` method-suffix form.
+- **No networking dependency.** `Assets/` must compile with no reference to
+  `Unity.Netcode`.
 - Assemblies: `Core.Runtime`, `Combat.Runtime`, `Quest.Runtime`, `UI.Runtime`.
   New systems go in an existing assembly or a new one — never in the default
   `Assembly-CSharp`.
@@ -152,7 +157,8 @@ expression bodies, minimal ceremony. Do not reformat existing files to your tast
 A task is done when **all** of these are true:
 
 1. Every requirement ID in the task's scope is implemented.
-2. `SceneBuilder` regenerates cleanly from scratch and the game is playable.
+2. *Azeroth04 ▸ Build Oathfire Room* regenerates cleanly and `World.unity` is
+   playable straight from Play.
 3. EditMode and PlayMode tests pass in batch mode (`docs/04-VERIFICATION.md`).
 4. No new console errors or warnings during a full play session of the room.
 5. `docs/05-STATUS.md` is updated: requirements ticked, new gaps recorded.

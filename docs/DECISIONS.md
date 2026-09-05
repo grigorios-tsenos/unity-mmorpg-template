@@ -29,17 +29,13 @@ regeneration — that is expected and is not a reason to hand-edit them.
 
 ## 0002 · 2026-09-05 · The server is the only authority; no client prediction
 
-**Context.** This is LAN-scale co-op, not a latency-sensitive competitive game. Client
-prediction and reconciliation is the single largest source of authority bugs in a
-codebase this size.
+**Superseded by 0006.** Kept for the record.
+
+**Context.** This is LAN-scale co-op, not a latency-sensitive competitive game.
 
 **Decision.** Clients send intent at 20 Hz; the server simulates and `NetworkTransform`
 replicates the result. Every server RPC validates permission, argument finiteness and
 range, distance, line of sight, cooldown, and resource. No client-side prediction.
-
-**Consequences.** Movement has one round-trip of latency, which is imperceptible on a
-LAN and acceptable elsewhere for this project. Revisit only when a real latency
-problem is measured — not preemptively. See `M1` "Out of scope".
 
 ---
 
@@ -88,3 +84,52 @@ pointer to the decision that dropped them.
 
 **Consequences.** A failing test names the spec line it violates. The status board can
 be trusted. Slightly more ceremony per change — worth it.
+
+---
+
+## 0006 · 2026-09-05 · Networking removed; the game is single-player
+
+**Supersedes 0002.**
+
+**Context.** The project was carrying a full Netcode-for-GameObjects layer — server
+authority, RPCs, `NetworkVariable`, a Bootstrap/login scene — while the actual goal
+was to finish *one room and one questline* to a shippable standard. Every gameplay
+change had to be designed twice: once for the mechanic, once for its replication. The
+first automated verification run of this repo failed for exactly that reason: the
+host-mode integration test would not run headlessly, leaving the whole slice
+unverifiable from the command line.
+
+**Decision.** Networking was removed from `Assets/` and preserved in
+`Archive/Networking/`, outside the Unity project. `NetworkVariable<T>` was replaced by
+`ObservableValue<T>`, which keeps the same subscribe-to-change shape the HUD was
+written against. There is one scene, `World.unity`, and pressing Play puts you in the
+room.
+
+**Consequences.**
+- Every requirement that described multiplayer behaviour is withdrawn rather than
+  deleted — struck through in its spec, pointing here. IDs are never reused.
+- `AGENTS.md §3.2` changed from "the server is the only authority" to "gameplay owns
+  state; presentation only reads it". Validation at the entry point of each action
+  still matters and is still tested; it is just no longer an anti-cheat boundary.
+- The PlayMode suite now runs headlessly and passes, so the slice is verifiable
+  again. Blocker `V-001` is closed.
+- Multiplayer is not forbidden forever, but bringing it back is a deliberate decision
+  with its own entry here — never an incidental change. `Archive/Networking/` is the
+  starting point if it happens.
+
+---
+
+## 0007 · 2026-09-05 · Animation and ambience are presentation-only consumers
+
+**Context.** With networking gone, character animation needed somewhere to live that
+did not tempt anyone into letting animation drive gameplay.
+
+**Decision.** `CharacterVisual` lives in `UI.Runtime` and *reads* character state,
+subscribing to `PlayerCombat.AbilityPerformed` and `Enemy.Attacked` for one-shots.
+`ChamberAmbience` generates its audio procedurally at runtime rather than shipping
+audio files. `OathfireVisual` and `TorchFlicker` follow the same read-only pattern.
+
+**Consequences.** The dependency direction stays correct — gameplay never calls
+animation code, so `AGENTS.md §3.3` still holds. No root motion, ever: animation must
+not move a character. Keeping ambience procedural avoids a licensing surface and keeps
+the repo small; changing that needs an entry here.

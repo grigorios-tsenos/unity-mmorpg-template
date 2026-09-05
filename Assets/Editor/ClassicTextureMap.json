@@ -1,0 +1,199 @@
+{
+  "entries": [
+    {
+      "sourceAsset": "Assets/Art/Props/banner_patternA_red.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/chair.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/bed_decorated.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/floor_tile_large.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/shelf_small_candles.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/table_long_decorated_A.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/pillar_decorated.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/sword_shield.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/floor_wood_large.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/wall.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/table_small_decorated_A.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/wall_archedwindow_open.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/wall_shelves.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/plate_food_A.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/torch_mounted.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/shelf_large.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/bottle_A_green.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/barrel_large_decorated.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/banner_shield_red.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/barrel_small_stack.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/candle_triple.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/crates_stacked.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Props/stool.glb",
+      "materialName": "texture",
+      "texturePath": "Assets/Art/ClassicTextures/f9ae182518f908bd.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/mira.glb",
+      "materialName": "MI_Peasant",
+      "texturePath": "Assets/Art/ClassicTextures/a43635628d95571c.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/mira.glb",
+      "materialName": "MI_Hair_2",
+      "texturePath": "Assets/Art/ClassicTextures/f9f4f2fb3eeeefb0.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/mira.glb",
+      "materialName": "MI_Eyes",
+      "texturePath": "Assets/Art/ClassicTextures/d08e3356a83211bc.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/mira.glb",
+      "materialName": "MI_Superhero_Female",
+      "texturePath": "Assets/Art/ClassicTextures/d366843ee7d9e9f3.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/mira.glb",
+      "materialName": "MI_Hair_2",
+      "texturePath": "Assets/Art/ClassicTextures/f9f4f2fb3eeeefb0.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/wayfarer.glb",
+      "materialName": "MI_Ranger",
+      "texturePath": "Assets/Art/ClassicTextures/846ef2170b04ee58.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/wayfarer.glb",
+      "materialName": "MI_Regular_Male",
+      "texturePath": "Assets/Art/ClassicTextures/b4dcc0f4139aab54.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/wayfarer.glb",
+      "materialName": "MI_Hair_1",
+      "texturePath": "Assets/Art/ClassicTextures/bc7aa863bd22ab0a.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/wayfarer.glb",
+      "materialName": "MI_Eyes",
+      "texturePath": "Assets/Art/ClassicTextures/d08e3356a83211bc.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/wayfarer.glb",
+      "materialName": "MI_Superhero_Male",
+      "texturePath": "Assets/Art/ClassicTextures/df680cbc1967a61e.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/toma.glb",
+      "materialName": "MI_Peasant",
+      "texturePath": "Assets/Art/ClassicTextures/a43635628d95571c.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/toma.glb",
+      "materialName": "MI_Regular_Male",
+      "texturePath": "Assets/Art/ClassicTextures/b4dcc0f4139aab54.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/toma.glb",
+      "materialName": "MI_Hair_1",
+      "texturePath": "Assets/Art/ClassicTextures/bc7aa863bd22ab0a.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/toma.glb",
+      "materialName": "MI_Eyes",
+      "texturePath": "Assets/Art/ClassicTextures/d08e3356a83211bc.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/toma.glb",
+      "materialName": "MI_Superhero_Male",
+      "texturePath": "Assets/Art/ClassicTextures/df680cbc1967a61e.png"
+    },
+    {
+      "sourceAsset": "Assets/Art/Characters/toma.glb",
+      "materialName": "MI_Hair_1",
+      "texturePath": "Assets/Art/ClassicTextures/bc7aa863bd22ab0a.png"
+    }
+  ]
+}

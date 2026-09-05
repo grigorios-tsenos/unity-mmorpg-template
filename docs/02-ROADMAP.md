@@ -20,27 +20,28 @@ standard we would ship. Everything after this phase is measured against it.
 **Exit criteria.** A player launches the game, is greeted by Mira, accepts the trial,
 fights, rekindles the Oathfire, turns in, and is rewarded — with no placeholder
 geometry, no console errors, no soft-locks, no stuck-on-furniture, and every step
-legible without reading the code. Two players on a LAN can do it together.
+legible without reading the code.
 
-The animation gap (`D-06`) is the largest visible defect in the slice. It is
-scheduled as the first Phase 2 spec rather than inside Phase 1, because it is a
-system, not a room detail — but Phase 1 does not count as shipped until Phase 2's
-`M3` closes. Treat them as one release.
+Animation and audio were the largest visible gaps in the slice. Both were closed by
+the single-player rework on `main`: `CharacterVisual` drives idle, movement, melee,
+casting and death, and `ChamberAmbience` / `TorchFlicker` / `OathfireVisual` give the
+room life. Phase 2 refines them rather than building them.
 
 ---
 
 ## Phase 2 — Perfect the mechanics
 
-Only after Phase 1's rooms and quest are closed. Order within the phase matters:
-animation first because it changes how everything else *reads*, then feel, then depth.
+Only after Phase 1's room and quest are closed. Animation and audio both landed with
+the single-player rework, so this phase now starts from a moving, audible game rather
+than from static meshes.
 
 | Order | Spec | Why here |
 |---|---|---|
-| 1 | [mech-03-animation](specs/mech-03-animation.md) | Static T-posing characters make every other mechanic impossible to judge |
-| 2 | [mech-01-movement-camera](specs/mech-01-movement-camera.md) | Steering, momentum, jump, camera occlusion and orbit — the thing the player touches every second |
-| 3 | [mech-02-combat-gcd](specs/mech-02-combat-gcd.md) | GCD, swing timers, resources, interrupts, threat, the target frame |
+| 1 | [mech-01-movement-camera](specs/mech-01-movement-camera.md) | Steering, momentum, jump, camera occlusion and orbit — the thing the player touches every second |
+| 2 | [mech-02-combat-gcd](specs/mech-02-combat-gcd.md) | GCD, swing timers, resources, interrupts, threat, the target frame |
+| 3 | [mech-03-animation](specs/mech-03-animation.md) | Now a *refinement* pass: blending, transition control, and getting swing impact onto the damage frame |
 | 4 | *mech-05-ai-navigation* (to be written) | Aggro, leash, pathing around furniture (`D-04`), pull mechanics |
-| 5 | *mech-06-audio-feedback* (to be written) | Swing/impact/cast/footstep/UI audio, hit reactions (`D-07`) |
+| 5 | *mech-06-audio-feedback* (to be written) | Per-action audio on top of the existing procedural ambience (`ChamberAmbience`) |
 
 **Exit criteria.** Someone who played WoW in 2004 recognises the feel: the GCD reads
 correctly, casts get interrupted the way they expect, mobs leash, the camera behaves,
@@ -70,13 +71,16 @@ Only once one room, one questline, the mechanics, and the classes are proven.
 - Generalise `QuestData`/`QuestManager` beyond the single hardcoded trial (`D-05`)
 - Zone/room transition framework (doors, load boundaries, per-room spawn tables)
 - Room 2 authored against the now-proven pipeline
-- Persistence: character save/load on the connect callback
-- Interest management once concurrency exceeds a handful of players
+- Persistence: character save/load (`D-11` — progress currently lasts one session)
+- Multiplayer, if it is ever wanted again: `Archive/Networking/` holds the previous
+  Netcode layer. Returning to it is a deliberate decision with a `DECISIONS.md`
+  entry, never an incidental change
 
 ---
 
 ## Explicitly not now
 
 Recorded so nobody starts them: mounts, professions, PvP, auction house, raid-size
-groups, procedural content, dedicated-server hosting beyond LAN, and any second
-questline before Phase 4.
+groups, procedural content, and any second questline before Phase 4.
+Multiplayer is out of scope: it was deliberately removed to finish the single-player
+room first.

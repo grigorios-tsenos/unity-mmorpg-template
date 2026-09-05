@@ -22,7 +22,7 @@ anything, and a player who played WoW in 2004 should recognise every beat.
 (`Resources/RPG/OathfireTrial.asset`), `QuestMarker`, and the HUD quest tracker and
 journal. Working today:
 
-Stage machine, server-authoritative:
+Stage machine, owned by `QuestManager`:
 
 | Stage | Meaning |
 |---|---|
@@ -33,14 +33,13 @@ Stage machine, server-authoritative:
 | 4 | Return to Mira — each participant claims once |
 | 5 | Complete; the trial can be repeated |
 
-- Progress is **shared across the party**; each participant claims a reward once.
-  `Claimed` is appended before rewards are granted, so double turn-in is impossible.
-- Late arrivals join the participant list by contributing a kill.
-- Disconnects are removed from the participant list and re-check completion, so a
-  leaver cannot soft-lock the turn-in.
+- Single-player. The claim is recorded before rewards are granted, so a repeated
+  turn-in cannot pay twice — asserted by the PlayMode test.
 - Rewards: 80 copper, 100 XP, 2 potions, Seal of the Hearth.
-- Dialogue actions are whitelisted server-side per dialogue, so a forged
-  `ChooseRpc(id)` cannot grant anything — covered by an existing PlayMode assertion.
+- Dialogue actions are whitelisted per dialogue, so an action ID that was never
+  offered does nothing — asserted by the PlayMode test.
+- The briefing is solo-facing ("Return with the embers and earn the hearth's
+  blessing"); the old party wording was migrated in `ClassicContentBuilder`.
 
 Known gaps: quest text and stage logic are hardcoded rather than data (`D-05`); no
 audio or visual celebration on completion; no quest-accepted/completed sound; the
@@ -53,32 +52,32 @@ journal is functional but sparse.
 | ID | Requirement | Acceptance |
 |---|---|---|
 | `Q1-F-001` | The full loop 0 → 5 completes solo with no soft-lock at any stage | Covered by `TrialIntegrationTests` — keep green |
-| `Q1-F-002` | The full loop completes with two players, both claiming a reward | PlayMode: `Q1_F_002_TwoPlayersBothClaim` |
-| `Q1-F-003` | The quest can be repeated from stage 5 and fully resets kills, collected count, participants, claims, and ember inventory | PlayMode: `Q1_F_003_RepeatResetsAllProgress` |
+| ~~`Q1-F-002`~~ | ~~The full loop completes with two players~~ | Withdrawn — single-player. See `DECISIONS-0006` |
+| `Q1-F-003` | The quest can be repeated from stage 5 and fully resets kills, collected count, claim, and ember inventory | PlayMode: `Q1_F_003_RepeatResetsAllProgress` |
 | `Q1-F-004` | Killing guardians before accepting the quest grants no progress | PlayMode: `Q1_F_004_KillsBeforeAcceptDoNotCount` |
 | `Q1-F-005` | The objective text in the tracker is correct and specific at every stage, including the count of each objective | EditMode: `Q1_F_005_ObjectiveTextCoversEveryStage` iterates 0–5 and asserts non-empty, distinct strings |
 | `Q1-F-006` | The journal (`L`) shows briefing, current objectives with counts, and the full reward list | Manual Q1-M-2 |
 | `Q1-F-007` | Abandoning is possible and returns the quest to stage 0 without leaving stray embers or spawned guardians | PlayMode: `Q1_F_007_AbandonCleansUp` — **new behaviour, does not exist yet** |
 | `Q1-F-008` | Quest items are removed from inventory on turn-in and on abandon | Partly covered (`ClearQuestItem` on brazier); extend for abandon |
-| `Q1-F-009` | If every participant disconnects mid-trial, the quest resets rather than stranding at a stage nobody can advance | PlayMode: `Q1_F_009_AllParticipantsLeaveResets` |
+| ~~`Q1-F-009`~~ | ~~All participants disconnecting resets the quest~~ | Withdrawn — single-player. See `DECISIONS-0006` |
 
 ### Presentation (`A`)
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| `Q1-A-001` | Accepting the quest plays an accept sound and a brief toast; completing plays a distinct, more triumphant one | Manual Q1-M-3 (blocked on Phase 2 audio; specify now, implement then) |
+| `Q1-A-001` | Accepting the quest plays an accept sound and a brief toast; completing plays a distinct, more triumphant one | Manual Q1-M-3. Ambience exists (`ChamberAmbience`); per-action audio is Phase 2 |
 | `Q1-A-002` | Objective progress updates visibly in the tracker the instant it changes — count animates or flashes, never silently increments | Manual Q1-M-1 |
 | `Q1-A-003` | The dialogue window uses the parchment style, types the briefing in rather than snapping it on, and can be skipped with a click | Manual Q1-M-2 |
 | `Q1-A-004` | Lighting the Oathfire is a visible event in the room — the brazier ignites, the room warms, everyone present sees it at once | Manual Q1-M-1, and `R1-F-005` |
 | `Q1-A-005` | Reward hand-over shows the item, the coin split (gold/silver/copper), and the XP gained | Manual Q1-M-2 |
 
-### Netcode (`N`)
+### State integrity (`N`)
 
 | ID | Requirement | Acceptance |
 |---|---|---|
 | `Q1-N-001` | No dialogue action ID can grant a reward, item, gold, or heal outside the state that offers it | Existing assertion in `TrialIntegrationTests`; extend to every action ID 0–9 at every stage |
-| `Q1-N-002` | Quest state advances only on the server; a client cannot force a stage change | PlayMode: `Q1_N_002_ClientCannotAdvanceStage` |
-| `Q1-N-003` | Rewards are granted exactly once per participant, even under repeated rapid turn-in attempts | Existing double-claim assertion; add a 20× loop |
+| ~~`Q1-N-002`~~ | ~~A client cannot force a stage change~~ | Withdrawn — single-player. See `DECISIONS-0006` |
+| `Q1-N-003` | Rewards are granted exactly once, even under repeated rapid turn-in attempts | Existing double-claim assertion; add a 20× loop |
 | `Q1-N-004` | The rest-at-hearth action cannot be used to full-heal during combat | `Interactable.Choose` checks `LastCombatTime`; add `Q1_N_004_CannotRestInCombat` |
 
 ### UX (`X`)
@@ -99,7 +98,7 @@ journal is functional but sparse.
 
 | # | Question | Options | Blocking? |
 |---|---|---|---|
-| Q1-D1 | Should shared party progress stay, or should each player track their own kills/embers like retail? | (a) shared (current); (b) per-player | No — default (a); it is what the code does and it suits LAN co-op. Revisit in Phase 4 |
+| ~~Q1-D1~~ | ~~Shared party progress or per-player?~~ | Resolved by the single-player rework — there is one player |
 | Q1-D2 | Is quest abandon reachable from the journal, from Mira's dialogue, or both? | journal / dialogue / both | No — default both |
 | Q1-D3 | Does the warden need a mechanic beyond a bigger health pool (a knockback, an enrage, adds)? | none / one telegraphed ability | No — default one telegraphed ability, specified in `mech-02` once combat is proven |
 
@@ -120,6 +119,6 @@ regression net for this quest. New tests use the `Q1_*` naming from §3.
 > be legible, parchment-styled, and complete. On turn-in, the reward panel must show
 > the item, the coin split, and the XP.
 
-> **Q1-M-3 — celebration.** *(after Phase 2 audio)*
+> **Q1-M-3 — celebration.** *(after Phase 2 per-action audio)*
 > Accept and complete the quest. Both moments must sound and feel distinct, and
 > lighting the Oathfire must be the most dramatic beat in the room.

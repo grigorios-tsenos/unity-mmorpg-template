@@ -1,38 +1,48 @@
 # M3 · Animation
 
-> **Status:** Draft — first spec of Phase 2
-> **Phase:** 2, order 1
+> **Status:** Draft — refinement pass, not a build-from-nothing
+> **Phase:** 2, order 3
 > **Depends on:** [room-01-oathfire-chamber](room-01-oathfire-chamber.md)
 
 ---
 
 ## 1. Intent
 
-Right now every character in the game is a static mesh that slides across the floor
-in a T-pose. It is the single largest gap between what this project is and what it is
-trying to be — no amount of combat tuning reads correctly while the models don't move.
+Characters now move — idle, jog, melee, cast and death all play. What is missing is
+*quality*: there is no blending, transitions are instant, clips are looked up by name
+string, and nothing guarantees a swing's impact frame lines up with the damage it
+deals.
 
 When this is done: characters idle with weight, run with foot contact, swing weapons
 on the beat of the swing timer, flinch when hit, cast with a wind-up the enemy can
-read, and fall over when they die.
+read, and fall over when they die — all of it blended rather than snapped.
 
 ## 2. Current state
 
-Nothing. `SceneBuilder.BuildPlayerPrefab` and `BuildEnemyPrefab` instantiate the
-`.glb` visual and add no `Animator`. There are no animation clips in `Assets/Art` —
-only `Assets/Art/licenses/quaternius-animations.txt`, so the licence for a Quaternius
-animation set is already cleared but the clips are not imported.
+`CharacterVisual` (`Assets/Scripts/UI/CharacterVisual.cs`) is on both the Player and
+Guardian prefabs, added by `SceneBuilder`. It drives a **legacy `Animation`
+component** on the bundled character models.
 
-The information the animation layer needs already exists and is replicated:
+Working today:
 
-- `PlayerStats.State` — `Idle | Moving | Casting | Stunned`
-- `Enemy.State` — `Wander | Aggro | Chase | Combat | Leash` (+ `Passive`, `Alive`)
-- `PlayerCombat.CastingSlot` / `CastEnd` — which spell, and when it lands
-- `PlayerCombat.AutoAttacking` and the internal `swingReady` timer
-- `GameEvents.Damage` — fires at the moment of every hit
+- A 0.06 s polling coroutine picks a clip from character state: `Death01` when dead,
+  `Spell_Simple_Idle_Loop` while casting, `Jog_Fwd_Loop` while moving, `Sword_Idle`
+  for an enemy in combat, otherwise `Idle_Loop`.
+- One-shot actions are event-driven: `PlayerCombat.AbilityPerformed` →
+  `Spell_Simple_Shoot` for a timed cast or `Sword_Attack` for an instant;
+  `Enemy.Attacked` → `Sword_Attack`. Each holds the rig for 0.7 s via `actionUntil`.
+- Clips ending in `Loop` or containing `Idle` are set to `WrapMode.Loop`, everything
+  else to `ClampForever`.
+- The dependency direction is correct: presentation subscribes to gameplay events,
+  gameplay never calls animation code.
+- The PlayMode test asserts the rig exists (`GetComponentInChildren<Animation>()`).
 
-**No new network traffic is needed.** The animation layer is a *consumer* of state
-that already replicates. Adding `NetworkAnimator` would be the wrong answer.
+Gaps (`D-12`): the legacy `Animation` component gives no blending or transition
+control, so every state change is a hard cut. Clips are matched by name string with
+an `EndsWith` fallback, which fails silently when a clip is missing or renamed. The
+fixed 0.7 s `actionUntil` window is unrelated to actual clip length or to the swing
+timer, so impact frames and damage are only coincidentally aligned. There is no hit
+reaction and no jump animation.
 
 ## 3. Requirements
 
@@ -40,11 +50,11 @@ that already replicates. Adding `NetworkAnimator` would be the wrong answer.
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| `M3-F-001` | Player and enemy prefabs carry an `Animator` with an authored controller, added by `SceneBuilder` | EditMode: `M3_F_001_CharacterPrefabsHaveAnimator` |
+| `M3-F-001` | Character prefabs carry a rig with blending and transition control — an `Animator` controller, or a justified reason the legacy `Animation` component stays | EditMode: `M3_F_001_CharacterPrefabsHaveAnimationRig` |
 | `M3-F-002` | Locomotion blends idle → walk → run from actual horizontal velocity, not from the input vector | PlayMode: `M3_F_002_LocomotionFollowsVelocity` |
-| `M3-F-003` | The animation state is derived from replicated state, so remote players are animated correctly on every client | PlayMode: two-client `M3_F_003_RemotePlayersAnimate` |
+| `M3-F-003` | A missing or renamed clip fails loudly (a logged warning naming the clip) rather than silently doing nothing | EditMode: `M3_F_003_MissingClipIsReported` |
 | `M3-F-004` | Jump has distinct take-off, airborne, and land states, driven by `CharacterController.isGrounded` | Manual M3-M-1 |
-| `M3-F-005` | Auto-attack swings play once per swing, synchronised to the server swing timer — the damage number appears on the impact frame, not the wind-up | PlayMode: `M3_F_005_SwingImpactAlignsWithDamage` (±100 ms) |
+| `M3-F-005` | Auto-attack swings play once per swing and are driven by the actual swing timer and clip length, not a fixed 0.7 s window — the damage number appears on the impact frame | PlayMode: `M3_F_005_SwingImpactAlignsWithDamage` (±100 ms) |
 | `M3-F-006` | Casting plays a wind-up that lasts exactly `SpellData.castTime`, and is cut immediately when the cast is interrupted or cancelled | PlayMode: `M3_F_006_CastAnimationMatchesCastTime` |
 | `M3-F-007` | Taking damage plays a hit reaction that does not interrupt locomotion (upper-body layer) | Manual M3-M-2 |
 | `M3-F-008` | Death plays a fall, the body stays down for the respawn delay, and the character stands on respawn | PlayMode + Manual M3-M-2 |
@@ -65,7 +75,7 @@ that already replicates. Adding `NetworkAnimator` would be the wrong answer.
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| `M3-P-001` | Animation costs under 1 ms/frame with 4 players and 8 enemies | Manual M3-M-4, Profiler |
+| `M3-P-001` | Animation costs under 1 ms/frame with 8 enemies present | Manual M3-M-4, Profiler |
 | `M3-P-002` | Off-screen and distant characters use culled animator updates | EditMode: assert `cullingMode == CullUpdateTransforms` |
 
 ## 4. Out of scope
@@ -78,8 +88,8 @@ that already replicates. Adding `NetworkAnimator` would be the wrong answer.
 
 | # | Question | Options | Blocking? |
 |---|---|---|---|
-| M3-D1 | Which animation source? | (a) Quaternius animation pack — licence already cleared, matches the existing character style; (b) Mixamo retarget; (c) hand-authored | **Yes** — this decides the retarget pipeline. Default recommendation: (a), because the licence is already in the repo and the rigs match |
-| M3-D2 | Animator Controller as an authored asset, or built in code like the HUD? | (a) authored `.controller` asset; (b) generated by `SceneBuilder` | No — default (a); controllers are a poor fit for code generation and Unity's tooling is genuinely better here. This is a deliberate exception to the "generate everything" rule and needs a `DECISIONS.md` entry |
+| ~~M3-D1~~ | ~~Which animation source?~~ | Resolved by events — bundled clips on the existing character models are already wired |
+| M3-D2 | Migrate from the legacy `Animation` component to an `Animator` controller for real blending (`D-12`)? | (a) migrate — proper blend trees and transition control; (b) stay legacy and hand-roll crossfades | No — default (a). If (a), the controller is an authored `.controller` asset, a deliberate exception to the "generate everything" rule needing a `DECISIONS.md` entry |
 | M3-D3 | Do enemies and players share one controller with different clips, or get separate controllers? | shared / separate | No — default shared, overridden per character with an `AnimatorOverrideController` |
 
 ## 6. Verification plan
@@ -103,4 +113,4 @@ and only the user may tick them.
 > Interact — they should turn to face you.
 
 > **M3-M-4 — cost.**
-> Profiler with 4 players and 8 enemies: the Animator sample stays under 1 ms/frame.
+> Profiler with 8 enemies: the animation sample stays under 1 ms/frame.

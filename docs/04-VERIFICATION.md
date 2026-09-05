@@ -33,17 +33,21 @@ UNITY=/Applications/Unity/Hub/Editor/6000.6.0f1/Unity.app/Contents/MacOS/Unity
 "$UNITY" -batchmode -nographic -projectPath "$PWD" -runTests -testPlatform EditMode -testResults /tmp/EditMode.xml -logFile /tmp/unity-editmode.log
 ```
 
-### PlayMode tests — the live game, host mode, netcode
+### PlayMode tests — the live game
 
 ```bash
 "$UNITY" -batchmode -nographic -projectPath "$PWD" -runTests -testPlatform PlayMode -testResults /tmp/PlayMode.xml -logFile /tmp/unity-playmode.log
 ```
 
-### Regenerate scenes, prefabs and content assets
+### Regenerate the room, prefabs and content assets
 
 ```bash
 "$UNITY" -batchmode -nographic -quit -projectPath "$PWD" -executeMethod SceneBuilder.Build -logFile /tmp/unity-build.log
 ```
+
+Same as the *Azeroth04 ▸ Build Oathfire Room* menu item. It rewrites
+`Assets/Scenes/World.unity` and both character prefabs — save any hand-made scene
+changes elsewhere first.
 
 ### Reading the result
 
@@ -66,7 +70,7 @@ never ran.
 |---|---|
 | Balance numbers, data relationships, ScriptableObject invariants | EditMode |
 | Pure logic: state machines, formulas, cooldown arithmetic | EditMode |
-| Server authority, RPC validation, quest flow, loot, rewards | PlayMode, host mode |
+| Action validation, quest flow, loot, rewards | PlayMode |
 | Anything requiring a real frame: movement, collision, camera | PlayMode |
 | Look, feel, animation quality, audio mix | **Manual — write the steps out** |
 
@@ -84,10 +88,18 @@ Name tests for the requirement they close so a failure points at a spec line:
 - `Assets/Tests/Editor/ClassicRulesTests.cs` — HFSM ancestor transitions; guardian
   loot can actually satisfy the quest's collect requirement; every ability has a real
   cost, a 1.5 s GCD, and the three resource types are covered.
-- `Assets/Tests/PlayMode/TrialIntegrationTests.cs` — a full host-mode run of the
-  trial: cast interruption by movement, mana not charged on a cancelled cast, kill
-  and collect progress, boss stage, brazier, single-claim rewards, potion cooldown,
-  energy ticks. This is the regression net for Phase 1; keep it green.
+- `Assets/Tests/PlayMode/TrialIntegrationTests.cs` —
+  `RoomMovementCombatAndQuestWorkWithoutNetworking` loads `World.unity` directly and
+  walks the whole slice: floor contact, jump and air momentum, an un-offered dialogue
+  choice granting nothing, cast interruption by movement with no resource charged,
+  a completed cast damaging the target, guardian leash-and-heal, kill/collect
+  progress, the boss stage, the brazier, single-claim rewards, potion cooldown,
+  energy ticks, and death recovery. It drives movement through
+  `PlayerController.ReadInput = false` + `SetMovement`, so it never depends on real
+  input. **This is the regression net for Phase 1 — keep it green.**
+- `Assets/Tests/PlayMode/RoomPreview.cs` — `RoomPreview.Capture(path)` renders a
+  screenshot of the room when a graphics device is available. Useful for eyeballing
+  a layout change without opening the Editor.
 
 ---
 
@@ -111,8 +123,8 @@ An agent may not tick a manual criterion. Only the user does, after looking.
 
 1. EditMode and PlayMode runs completed, counts read, log checked for `error CS`
    and exceptions.
-2. `SceneBuilder.Build` re-run and the game launched at least once if the Task
-   touched scenes, prefabs, or content assets.
+2. *Azeroth04 ▸ Build Oathfire Room* re-run and `World.unity` played at least once
+   if the Task touched scenes, prefabs, or content assets.
 3. Every automatable acceptance criterion has a named test that passes.
 4. Every manual criterion is listed in the handoff with its steps, marked *awaiting
    user check*.

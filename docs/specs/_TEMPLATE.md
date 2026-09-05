@@ -29,7 +29,7 @@ Grouped by category. Every line gets a permanent ID (see
 | `X-F-001` | The thing that must be true | How we prove it — test name, or "Manual: …" |
 
 ### Presentation (`A`)
-### Netcode / authority (`N`)
+### State integrity (`N`)
 ### Performance (`P`)
 ### UX / accessibility (`X`)
 

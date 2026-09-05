@@ -1,8 +1,8 @@
 # M2 · Combat, GCD & Resources
 
 > **Status:** Draft
-> **Phase:** 2, order 3
-> **Depends on:** [mech-03-animation](mech-03-animation.md), [mech-01-movement-camera](mech-01-movement-camera.md)
+> **Phase:** 2, order 2
+> **Depends on:** [mech-01-movement-camera](mech-01-movement-camera.md)
 
 ---
 
@@ -20,18 +20,19 @@ GCD sweeps, the swing lands, a number floats up.
 
 Implemented and working:
 
-- **Targeting:** `Tab` cycles living enemies within 25 m by `NetworkObjectId`;
-  `Escape` clears the target, stops auto-attack, and cancels the cast. The server
-  re-validates the target on every `SetTargetRpc`.
-- **GCD:** `GlobalReady` is a replicated server timestamp; every non-auto-attack
-  ability costs 1.5 s. Auto-attack toggle has `globalCooldown = 0`.
-- **Cast bar:** `CastingSlot` + `CastEnd` replicate, so remote clients can render
-  another player's cast.
+- **Targeting:** `Tab` cycles living enemies within 25 m by id; `Escape` clears the
+  target, stops auto-attack, and cancels the cast. `SelectTarget` re-validates.
+- **GCD:** `GlobalReady` is a timestamp; every non-auto-attack ability costs 1.5 s.
+  The auto-attack toggle has `globalCooldown = 0`.
+- **Cast bar:** `CastingSlot` + `CastEnd` are `ObservableValue`s the HUD binds to.
 - **Cast interruption:** moving during a cast cancels it and **does not charge the
   resource** — the spend happens in `FinishCast`, not on cast start. Verified by test.
-- **Validation on every cast:** slot range, death, pending cast, stun, GCD, per-slot
-  cooldown, target alive and in range, line of sight (`Physics.Linecast`, world
-  geometry only), not moving for timed casts, correct resource type and amount.
+- **Validation on every cast** (`TryCast`): slot range, death, pending cast, stun,
+  GCD, per-slot cooldown, target alive and in range, line of sight
+  (`Physics.Linecast`, world geometry only), not moving for timed casts, correct
+  resource type and amount.
+- **`AbilityPerformed`** fires on every landed swing and completed cast, which is
+  what `CharacterVisual` animates from.
 - **Resources:** Mana regenerates 12 per 2 s while resting and not casting; Energy
   ticks 20 per 2 s always; Rage decays 5 per 2 s while resting, gains 10 per swing
   and 8 per hit taken. Switching resource type is blocked in combat, while casting,
@@ -90,20 +91,20 @@ the UI; no facing requirement; no combat log.
 | `M2-A-004` | The action bar shows keybind, icon, cooldown sweep, and an out-of-range / out-of-resource state | Manual M2-M-1 |
 | `M2-A-005` | The swing timer is visible so auto-attack rhythm is readable | Manual M2-M-1 |
 
-### Netcode (`N`)
+### State integrity (`N`)
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| `M2-N-001` | Every combat outcome is computed server-side; a client cannot deal damage, grant itself resource, or bypass a cooldown | PlayMode: `M2_N_001_ForgedCastRpcRejected` fires every slot with every invalid precondition |
+| `M2-N-001` | `Use(slot)` with an out-of-range slot, while dead, stunned, on GCD, on cooldown, out of range, out of LOS, or short of resource does nothing and says why | PlayMode: `M2_N_001_InvalidCastPreconditionsRejected` walks every slot × every invalid precondition |
 | `M2-N-002` | Cast completion re-validates target, range, LOS and resource — a target that walked away mid-cast takes no damage and the resource is not spent | Already implemented in `FinishCast`; assert it |
-| `M2-N-003` | Damage numbers seen by clients always match server-applied damage | PlayMode: `M2_N_003_ClientDamageMatchesServer` |
-| `M2-N-004` | Two players attacking one enemy both get credit and neither can double-loot | PlayMode: `M2_N_004_SharedKillCredit` |
+| `M2-N-003` | Floating combat text always matches the damage actually applied | PlayMode: `M2_N_003_FloatingTextMatchesAppliedDamage` |
+| ~~`M2-N-004`~~ | ~~Two players attacking one enemy both get credit~~ | Withdrawn — single-player. See `DECISIONS-0006` |
 
 ## 4. Out of scope
 
 - Class-specific kits and resource ownership → [mech-04-classes](mech-04-classes.md)
 - Enemy pathing and pull mechanics → *mech-05-ai-navigation*
-- Combat audio → *mech-06-audio-feedback*
+- Per-action combat audio → *mech-06-audio-feedback*
 - Gear, stats, and itemisation → Phase 4
 
 ## 5. Open decisions

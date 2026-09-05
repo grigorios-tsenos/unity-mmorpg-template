@@ -90,7 +90,7 @@ One Task per commit. Message format:
 ```
 
 Types: `feat` `fix` `art` `spec` `test` `refactor` `chore`.
-Scopes: `room1` `quest1` `combat` `movement` `anim` `class` `ui` `net` `docs`.
+Scopes: `room1` `quest1` `combat` `movement` `anim` `class` `ui` `docs`.
 
 ---
 
@@ -107,7 +107,7 @@ Suggested split, because it plays to each tool's strengths:
 
 | Work | Who |
 |---|---|
-| Spec authoring, architecture changes, netcode/authority, anything cross-cutting | Claude Code |
+| Spec authoring, architecture changes, anything cross-cutting | Claude Code |
 | Well-specified single-file implementation, test writing, mechanical refactors | Either |
 | Long grinding passes across many similar call sites | Codex |
 
@@ -151,6 +151,6 @@ would be unsafe or waste the work — carry on with the stated assumption. Do no
 a whole Task on a question you can answer with a reasonable default and a note.
 
 Things that *do* warrant stopping and asking:
-- a change that would break saved player data or the network protocol
+- a change that would break saved player data, or reintroduce a networking dependency
 - a decision that locks in a class fantasy or an art direction
 - anything that would make a hard rule in `AGENTS.md` unenforceable

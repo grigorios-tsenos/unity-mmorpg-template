@@ -1,21 +1,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 namespace MmoTemplate.Rpg
 {
-    public class PlayerStats : NetworkBehaviour
+    [DisallowMultipleComponent]
+    public class PlayerStats : MonoBehaviour
     {
         public static readonly List<PlayerStats> All = new();
         public static PlayerStats Local { get; private set; }
         public static event Action<PlayerStats> LocalChanged;
-        public event Action Changed, Died;
+        public event Action Changed, Died, Recovered;
         public event Action<ItemData, int> ItemReceived;
-        public NetworkVariable<int> Health = new(100), Level = new(1), Xp = new(0), Gold = new(0), Potions = new(3);
-        public NetworkVariable<int> Resource = new(100);
-        public NetworkVariable<ResourceType> ResourceKind = new(ResourceType.Mana);
-        public NetworkVariable<CharacterState> State = new(CharacterState.Idle);
+        public ObservableValue<int> Health = new(100), Level = new(1), Xp = new(0), Gold = new(0), Potions = new(3);
+        public ObservableValue<int> Resource = new(100);
+        public ObservableValue<ResourceType> ResourceKind = new(ResourceType.Mana);
+        public ObservableValue<CharacterState> State = new(CharacterState.Idle);
         public IDialogueSender Dialogue { get; private set; }
         public int MaxHealth => 100 + (Level.Value - 1) * 5;
         public float XpForNextLevel => Level.Value * 60f;
@@ -24,19 +24,19 @@ namespace MmoTemplate.Rpg
         public float LastCombatTime { get; private set; } = -100;
         private CharacterController controller;
         private ItemData potion;
-        public NetworkVariable<double> PotionReady = new(0);
+        public ObservableValue<double> PotionReady = new(0);
         private readonly Dictionary<string,int> inventory = new();
         private void Awake() { controller = GetComponent<CharacterController>(); Dialogue = GetComponent<IDialogueSender>(); potion = Resources.Load<ItemData>("RPG/HealingPotion"); }
-        public override void OnNetworkSpawn()
+        private void Start()
         {
             All.Add(this);
             Health.OnValueChanged += OnValue; Level.OnValueChanged += OnValue; Xp.OnValueChanged += OnValue;
             Gold.OnValueChanged += OnValue; Potions.OnValueChanged += OnValue; Resource.OnValueChanged += OnValue;
             ResourceKind.OnValueChanged += OnKind;
-            if (IsServer) { Health.Value = MaxHealth; StartCoroutine(Ticks()); }
-            if (IsOwner) { Local = this; LocalChanged?.Invoke(this); }
+            { Health.Value = MaxHealth; StartCoroutine(Ticks()); }
+            { Local = this; LocalChanged?.Invoke(this); }
         }
-        public override void OnNetworkDespawn()
+        private void OnDestroy()
         {
             StopAllCoroutines(); All.Remove(this);
             Health.OnValueChanged -= OnValue; Level.OnValueChanged -= OnValue; Xp.OnValueChanged -= OnValue;
@@ -60,56 +60,57 @@ namespace MmoTemplate.Rpg
                 if (ResourceKind.Value == ResourceType.Rage && resting) Resource.Value = Mathf.Max(0, Resource.Value - 5);
             }
         }
-        public void MarkCombat() { if (IsServer) LastCombatTime = Time.time; }
-        public void GainResource(int amount) { if (IsServer) Resource.Value = Mathf.Clamp(Resource.Value + amount, 0, 100); }
+        public void MarkCombat() { LastCombatTime = Time.time; }
+        public void GainResource(int amount) { Resource.Value = Mathf.Clamp(Resource.Value + amount, 0, 100); }
         public bool Spend(SpellData spell)
         {
-            if (!IsServer || (spell.resourceCost > 0 && (ResourceKind.Value != spell.resourceType || Resource.Value < spell.resourceCost))) return false;
+            if ((spell.resourceCost > 0 && (ResourceKind.Value != spell.resourceType || Resource.Value < spell.resourceCost))) return false;
             Resource.Value -= spell.resourceCost; return true;
         }
-        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)] public void ChangeResourceRpc(ResourceType kind)
+        public void ChangeResource(ResourceType kind)
         {
             if (!Enum.IsDefined(typeof(ResourceType), kind) || Time.time - LastCombatTime < 5 || State.Value == CharacterState.Casting || IsDead) return;
             ResourceKind.Value = kind; Resource.Value = kind == ResourceType.Rage ? 0 : 100;
         }
         public void TakeDamage(int amount)
         {
-            if (!IsServer || IsDead || amount <= 0) return;
+            if (IsDead || amount <= 0) return;
             MarkCombat(); Health.Value = Mathf.Max(0, Health.Value - amount);
             if (ResourceKind.Value == ResourceType.Rage) GainResource(8);
-            DamageRpc(transform.position + Vector3.up * 2, amount);
+            ShowDamage(transform.position + Vector3.up * 2, amount);
             if (IsDead) { Died?.Invoke(); StartCoroutine(Recover()); }
         }
         private IEnumerator Recover()
         {
-            NotifyRpc("You fall. Returning to the hearth in five seconds…");
+            Notify("You fall. Returning to the hearth in five seconds…");
             yield return new WaitForSeconds(5);
-            controller.enabled = false; transform.position = new Vector3(-2, .2f, 3.5f); controller.enabled = true;
+            controller.enabled = false; transform.SetPositionAndRotation(new Vector3(-2, .2f, 4), Quaternion.Euler(0,180,0)); controller.enabled = true;
+            Recovered?.Invoke();
             Health.Value = MaxHealth; State.Value = CharacterState.Idle;
         }
-        public void Heal(int amount) { if (IsServer && !IsDead) Health.Value = Mathf.Min(MaxHealth, Health.Value + Mathf.Max(0, amount)); }
+        public void Heal(int amount) { if (!IsDead) Health.Value = Mathf.Min(MaxHealth, Health.Value + Mathf.Max(0, amount)); }
         public void AddXp(int amount)
         {
-            if (!IsServer || amount < 0) return;
+            if (amount < 0) return;
             Xp.Value += amount;
-            while (Xp.Value >= XpForNextLevel) { Xp.Value -= (int)XpForNextLevel; Level.Value++; Heal(MaxHealth); NotifyRpc($"You reach level {Level.Value}!"); }
+            while (Xp.Value >= XpForNextLevel) { Xp.Value -= (int)XpForNextLevel; Level.Value++; Heal(MaxHealth); Notify($"You reach level {Level.Value}!"); }
         }
-        public void AddGold(int amount) { if (IsServer) Gold.Value = Mathf.Max(0, Gold.Value + amount); }
-        public void GrantPotions(int count) { if (IsServer) Potions.Value += Mathf.Max(0,count); }
+        public void AddGold(int amount) { Gold.Value = Mathf.Max(0, Gold.Value + amount); }
+        public void GrantPotions(int count) { Potions.Value += Mathf.Max(0,count); }
         public int ItemCount(string id) => inventory.TryGetValue(id, out int value) ? value : 0;
         public void AddItem(ItemData item, int count)
         {
-            if (!IsServer || item == null || count <= 0) return;
+            if (item == null || count <= 0) return;
             inventory[item.itemId] = ItemCount(item.itemId) + count;
-            ItemReceived?.Invoke(item, count); NotifyRpc($"Received: {item.displayName} ×{count}");
+            ItemReceived?.Invoke(item, count); GameEvents.Say($"Loot: {item.displayName} ×{count}"); Notify($"Received: {item.displayName} ×{count}");
         }
-        public void ClearQuestItem(string id) { if (IsServer) inventory.Remove(id); }
-        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)] public void DrinkPotionRpc()
+        public void ClearQuestItem(string id) { inventory.Remove(id); }
+        public void DrinkPotion()
         {
-            if (IsDead || potion == null || NetworkManager.ServerTime.Time < PotionReady.Value || Potions.Value <= 0 || Health.Value >= MaxHealth) return;
-            PotionReady.Value = NetworkManager.ServerTime.Time + 60; Potions.Value--; Heal(potion.healing);
+            if (IsDead || potion == null || Time.timeAsDouble < PotionReady.Value || Potions.Value <= 0 || Health.Value >= MaxHealth) return;
+            PotionReady.Value = Time.timeAsDouble + 60; Potions.Value--; Heal(potion.healing);
         }
-        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)] private void NotifyRpc(string message) { if (IsOwner) GameEvents.Notify(message); }
-        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)] private void DamageRpc(Vector3 position, int amount) => GameEvents.Hit(position, -amount);
+        private void Notify(string message) { GameEvents.Notify(message); }
+        private void ShowDamage(Vector3 position, int amount) => GameEvents.Hit(position, -amount);
     }
 }
