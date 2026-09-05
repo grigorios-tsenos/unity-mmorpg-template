@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ae41f40832454fe6bf933c26dac0685, type: 3}
+  m_Name: OathfireTrial
+  m_EditorClassIdentifier: Quest.Runtime::MmoTemplate.Rpg.QuestData
+  title: THE OATHFIRE TRIAL
+  briefing: 'Welcome, traveler. Our hearth grows cold, and the old vows must be renewed.
+
+
+    Defeat three guardians in the eastern proving circle and gather their Oathfire Embers. Face the warden, rekindle the brazier, then return to me.
+
+
+    Your companions share this trial. Each earns a reward.'
+  guardianKills: 3
+  collectCount: 3
+  collectItem: {fileID: 11400000, guid: f2f79fdaf46244279bf8072fa4a68fd5, type: 2}
+  rewardItem: {fileID: 11400000, guid: 7517ee103d7734b4a87a63b4e8935889, type: 2}
+  rewardCopper: 80
+  rewardXp: 100
+  rewardPotions: 2

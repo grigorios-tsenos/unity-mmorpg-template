@@ -1,0 +1,10 @@
+{
+  "name": "Combat.Runtime",
+  "rootNamespace": "MmoTemplate",
+  "references": [
+    "Unity.Netcode.Runtime",
+    "Unity.Netcode.Components",
+    "Unity.Collections",
+    "Core.Runtime"
+  ]
+}

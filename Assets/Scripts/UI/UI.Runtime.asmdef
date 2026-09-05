@@ -1,0 +1,14 @@
+{
+  "name": "UI.Runtime",
+  "rootNamespace": "MmoTemplate",
+  "references": [
+    "Unity.Netcode.Runtime",
+    "Unity.Netcode.Components",
+    "Unity.Collections",
+    "Core.Runtime",
+    "Combat.Runtime",
+    "Quest.Runtime",
+    "UnityEngine.UI",
+    "Unity.Networking.Transport"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Azeroth.Editor.Tests",
+  "references": ["Core.Runtime", "Combat.Runtime", "Quest.Runtime", "UI.Runtime", "Unity.Netcode.Runtime", "Unity.Netcode.Components", "UnityEngine.UI"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
