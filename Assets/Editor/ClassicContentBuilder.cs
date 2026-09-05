@@ -23,7 +23,9 @@ public static class ClassicContentBuilder
         Spell("Mend","Hearthlight",2,6,0,25,50,ResourceType.Mana,true);
         Spell("HeroicStrike","Heroic Strike",0,3,3,15,35,ResourceType.Rage);
         Spell("SinisterStrike","Quick Slash",0,1,3,40,30,ResourceType.Energy);
-        Asset<QuestData>("OathfireTrial",a=>{a.title="THE OATHFIRE TRIAL";a.briefing="Welcome, traveler. Our hearth grows cold, and the old vows must be renewed.\n\nDefeat three guardians in the eastern proving circle and gather their Oathfire Embers. Face the warden, rekindle the brazier, then return to me.\n\nYour companions share this trial. Each earns a reward.";a.guardianKills=3;a.collectCount=3;a.collectItem=ember;a.rewardCopper=80;a.rewardXp=100;a.rewardPotions=2;a.rewardItem=seal;});
+        Asset<QuestData>("OathfireTrial",a=>{a.title="THE OATHFIRE TRIAL";a.briefing="Welcome, traveler. Our hearth grows cold, and the old vows must be renewed.\n\nDefeat three guardians in the eastern proving circle and gather their Oathfire Embers. Face the warden, rekindle the brazier, then return to me.\n\nReturn with the embers and earn the hearth’s blessing.";a.guardianKills=3;a.collectCount=3;a.collectItem=ember;a.rewardCopper=80;a.rewardXp=100;a.rewardPotions=2;a.rewardItem=seal;});
+        var quest = Resources.Load<QuestData>("RPG/OathfireTrial");
+        if (quest != null && quest.briefing.Contains("Your companions")) { quest.briefing = quest.briefing.Replace("Your companions share this trial. Each earns a reward.", "Return with the embers and earn the hearth’s blessing."); EditorUtility.SetDirty(quest); }
         ConfigurePipeline(); AssetDatabase.SaveAssets();
     }
     private static T Asset<T>(string name,System.Action<T> initialize) where T:ScriptableObject

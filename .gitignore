@@ -112,3 +112,6 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Asset-store demo imported by mistake and pulled back out of Assets/ — kept locally, not in the repo
+/Archive/InfinityPBR-Dungeon-2.5D-Demo/

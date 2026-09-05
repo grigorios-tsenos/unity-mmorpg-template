@@ -11,6 +11,8 @@ namespace MmoTemplate.Rpg
         public static event Action<bool, PlayerStats> EnemyKilled;
         public static event Action<Vector3, int> Damage;
         public static bool InputBlocked { get; set; }
+        /// <summary>True while the cursor is over the HUD, so gameplay leaves the mouse alone.</summary>
+        public static bool PointerOverUi { get; set; }
         public static string LocalPlayerName { get; set; } = "Wayfarer";
         public static void Notify(string value) => Notification?.Invoke(value);
         public static void Say(string value) => Chat?.Invoke(value);
@@ -23,7 +25,7 @@ namespace MmoTemplate.Rpg
         private static void Reset()
         {
             Notification = Chat = Prompt = null; Dialog = null; DialogueChoice = null;
-            EnemyKilled = null; Damage = null; InputBlocked = false;
+            EnemyKilled = null; Damage = null; InputBlocked = false; PointerOverUi = false;
         }
     }
     public enum ResourceType { Mana, Rage, Energy }

@@ -1,107 +1,65 @@
-# Unity MMORPG Template
+# Azeroth04 · The Oathfire Chamber
 
-A fresh Unity project scaffold using **Netcode for GameObjects (NGO)** — Unity's
-official multiplayer solution — wired the same way as this repo's Godot MMORPG
-template: an **authoritative server**, replicated player transforms, RPC-driven
-input and chat, and a login screen that can host, join, or run headless.
+The current focus is **one complete single-player room**. Open `Assets/Scenes/World.unity` and press Play. You start by the hearth immediately: no login screen, host button, connection, or network manager.
 
-## What's here vs. what you still need to do
+The project uses Unity **6000.6.0f1** and URP. The room and prefabs are already generated. **Azeroth04 → Build Oathfire Room** rebuilds the generated World scene and character prefabs while preserving authored content definitions. Save custom scene changes separately before rebuilding.
 
-Unity projects can't be fully hand-authored as text the way Godot's `.tscn`
-files can — scenes and prefabs are Editor-managed binary/YAML with GUID
-cross-references. So this scaffold gives you:
+## The room
 
-- ✅ A valid project skeleton (`ProjectVersion.txt`, `Packages/manifest.json`
-  pre-declaring Netcode for GameObjects, Unity Transport, Input System, TextMeshPro)
-  that Unity Hub can open directly.
-- ✅ Complete, compile-ready **C# scripts** implementing the full networking
-  model (see below).
-- ⬜ **You wire the scene** in the Editor — a 10-minute, one-time step listed
-  below, because that part genuinely requires the GUI (dragging a prefab
-  reference onto the NetworkManager, etc.).
+The west side contains the hearth, Mira, Toma's supplies, and the living quarters. The east contains a marked proving circle. The Oathfire brazier stands at the back of the hall.
 
-## One-time setup
+Speak to Mira, accept the trial, defeat three guardians and collect their embers, defeat the warden, rekindle the brazier, and return for your reward. Loot is collected automatically. The quest can be repeated after turning it in. Toma sells healing potions; Mira offers rest outside combat.
 
-1. **Install a matching Editor.** Open **Unity Hub** (already installed at
-   `/Applications/Unity Hub.app`), sign in (or create a free Personal account —
-   this step needs to be done by you), then *Installs ▸ Install Editor* and
-   pick a **6000.0 LTS** version (the project targets `6000.0.23f1`; Hub will
-   offer to install/match that automatically when you open the project).
-2. **Open the project**: Hub ▸ *Open* ▸ select `/Users/greg/Claude/unity-mmorpg-template`.
-   Unity will import and fetch the packages in `Packages/manifest.json`
-   automatically (needs network access, first import takes a few minutes).
-3. **Build the two scenes** (File ▸ New Scene, save into `Assets/Scenes/`):
+Bundled character animations now drive idle, movement, melee, casting, and death. Torches flicker, the room has quiet hearth ambience, and the Oathfire visibly lights when rekindled.
 
-   **`Bootstrap.unity`** (set as the first Build Settings scene):
-   - Add a `NetworkManager` GameObject: *GameObject ▸ Create Empty* → name it
-     `NetworkManager` → *Add Component ▸ Netcode ▸ NetworkManager* → *Add
-     Component ▸ Unity Transport*.
-   - Add a Canvas with: Name (InputField), Address (InputField), Port
-     (InputField), Host/Join/Dedicated buttons, a Status (Text).
-   - Add an empty GameObject with `NetworkBootstrap.cs`, drag the UI fields
-     into its Inspector slots.
+## Controls
 
-   **`World.unity`** (add to Build Settings after Bootstrap):
-   - Add `GameManager` empty GameObject with `PlayerSpawner.cs`.
-   - Add a chat Canvas (InputField + scrolling Text) with `ChatManager.cs`,
-     field references wired the same way; hook the InputField's *On End Edit*
-     event to `ChatManager.OnChatSubmitted`.
-   - Add a simple ground `Plane` for players to stand on.
+| Input | Action |
+| --- | --- |
+| W / S | Forward / backward (backpedaling is slower) |
+| A / D | Turn; strafe while holding right mouse |
+| Q / R | Strafe left / right |
+| Right mouse | Camera look and character steering |
+| Left mouse | Orbit independently |
+| Both mouse buttons | Run forward |
+| Wheel | Camera distance |
+| Space | Jump, preserving takeoff momentum |
+| Tab | Cycle nearby enemies |
+| 1 | Toggle auto attack |
+| 2 | Ember Bolt: timed Mana attack |
+| 3 | Hearthlight: timed Mana self-heal |
+| 4 | Heroic Strike: Rage melee attack |
+| 5 | Quick Slash: Energy melee attack |
+| 6 | Drink a healing potion |
+| E | Interact within 3.2 meters |
+| L | Open / close quest log |
+| Escape | Close panels; clear target and interrupt combat |
 
-4. **Build the Player prefab** (`Assets/Prefabs/Player.prefab`):
-   - A capsule or character model + `CharacterController`.
-   - `Add Component ▸ Netcode ▸ NetworkObject`.
-   - `Add Component ▸ Netcode ▸ Netcode Components ▸ Network Transform` — set
-     **Authority Mode = Server**.
-   - `Add Component ▸ PlayerController` (this repo's script).
-   - Drag the finished prefab into the `NetworkManager` component's
-     **Player Prefab** slot back in `Bootstrap.unity`.
+The Mana / Rage / Energy buttons are training controls available outside combat. Mana and health regenerate every two seconds after five seconds out of combat. Energy restores 20 each tick. Rage builds on swings and incoming damage, then decays outside combat.
 
-That's the entire one-time wiring; after that everything is driven by the
-scripts below and by Unity's normal Play-mode / Build workflow.
+Abilities share a 1.5-second global cooldown. Moving or jumping interrupts timed casts without spending the resource cost. Potions share a 60-second cooldown. Enemies that lose pursuit return home and heal. Death returns you to the hearth after five seconds.
 
-## Scripts
+## Content and architecture
 
-```
-Assets/Scripts/
-  Network/
-    NetworkBootstrap.cs   Login screen logic — Host / Join / Dedicated Server,
-                           name/address/port fields, headless -server launch flag.
-    PlayerSpawner.cs       Server-only: scatters each connecting player's spawn
-                           point so avatars don't stack on connect.
-  Player/
-    PlayerController.cs    Server-authoritative movement. Clients send an input
-                           vector via ServerRpc; only the server moves the
-                           CharacterController. NetworkTransform replicates the
-                           result to everyone.
-    CameraFollow.cs         Simple third-person follow rig for the local player.
-  UI/
-    ChatManager.cs          Client -> ServerRpc -> ClientRpc chat relay, plus
-                           local system messages (join/leave, connection status).
-```
+Tune spells, items, loot, enemies, and the quest in `Assets/Resources/RPG`. Gameplay uses local observable values and events, with four assemblies:
 
-## Running it
+- **Core.Runtime:** movement, camera, character stats, resource ticks, inventory storage, definitions, events, and the reusable hierarchical state machine.
+- **Combat.Runtime:** targeting, attacks, casts, cooldowns, interactions, and enemy states.
+- **Quest.Runtime:** trial progression, NPC dialogue, purchases, and one-time reward claims.
+- **UI.Runtime:** HUD, quest log, typed dialogue, action bar, character animations, markers, and room ambience.
 
-- **In-editor, one machine, two roles:** *Window ▸ Multiplayer Play Mode... ▸
-  Add Virtual Player*, then press Play. One instance can Host, the other Joins
-  `127.0.0.1`.
-- **Headless dedicated server (after building):**
+There are no networking types or RPCs in the active gameplay code. The former connection scripts and Bootstrap scene are preserved outside Unity's Assets folder in `Archive/Networking` for reference. They are not part of the game.
 
-  ```bash
-  ./Build/UnityMmoTemplate.app/Contents/MacOS/UnityMmoTemplate -batchmode -nographic -server -port 24565
-  ```
+## Art
 
-  (`Application.isBatchMode` + the `-server` flag route straight into
-  `NetworkBootstrap.StartDedicatedServer` without ever showing the login UI —
-  build the project first via *File ▸ Build Settings ▸ Build*.)
+Existing textured art is retained. Generated materials use URP Simple Lit diffuse with specular highlights disabled. Extracted diffuse textures import at a maximum of 1024px. No normal, metallic, or smoothness maps are configured. The HUD uses recessed dark frames, gold edging, parchment colors, yellow quest markers, and gold/silver/copper amounts.
 
-## Where to build next
+The inherited models remain prototype art rather than a finished custom 2004-style asset set. This pass focuses on making the chamber coherent and playable using those assets.
 
-- Persistence: hook character save/load into `PlayerSpawner`'s connect callback.
-- Authentication: validate a token/session before `NetworkManager.Singleton.StartClient()`
-  is allowed to complete (NGO's `ConnectionApprovalCallback`).
-- Interest management: NGO replicates to everyone by default — for real player
-  counts, look at `NetworkObject.CheckObjectVisibility` or a third-party spatial
-  interest-management package once you have more than a handful of concurrent players.
-- Combat/NPCs/items: add server-authoritative systems the same way as movement —
-  server computes, `NetworkVariable`s or `ClientRpc`s replicate the result.
+## Checks and current limits
+
+`Assets/Tests` contains EditMode checks for state transitions and authored content, and a PlayMode test for loading the room directly, floor contact, jumping and air momentum, cast interruption/completion, enemy leashing, kill/collect progress, reward duplication, potion cooldowns, resource ticks, and death recovery.
+
+Use **Window → General → Test Runner**. The PlayMode test can also render a room preview when a graphics device is available.
+
+Progress currently lasts for the play session. Persistence, additional rooms, and online play are outside the current room-focused scope. The resource selector is a training aid, not a finished class-selection system.
