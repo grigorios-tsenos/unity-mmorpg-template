@@ -58,6 +58,9 @@ user, never by an agent.
 - [x] `R1-F-006` authored spawn point — *the player is placed by `SceneBuilder`; the old hardcoded respawn literal is gone*
 - [ ] `R1-F-008` authored guardian spawn circle — *still a literal (`D-02`)*
 - [ ] `R1-F-009` merchant purchase is validated
+- [ ] `R1-F-010` front of the hall is a sealed door, not a bare barrier — *newly unblocked (`DECISIONS-0009`)*
+- [ ] `R1-F-011` the sealed door responds to interact
+- [ ] `R1-A-008` the door reads as "not yet", not as a bug *(manual)*
 - [x] `R1-A-002` lit brazier has animated warm light and a flame
 - [x] `R1-A-003` torches read as pools of warmth — *`TorchFlicker`*
 - [ ] `R1-A-001`, `R1-A-004`…`R1-A-007` remaining presentation *(manual)*
@@ -108,14 +111,17 @@ Found but deliberately not fixed. Each needs a requirement ID before anyone touc
 
 ## Decisions awaiting the user
 
-| # | Question | Why it matters now |
-|---|---|---|
-| `M4-D1` | The class roster — three (Warrior/Mage/Rogue) or four with a healer? | Blocking for Phase 3; without multiplayer, a dedicated healer is harder to justify, which strengthens the case for three |
-| `R1-D2` | Is the open front of the chamber a permanent wall or a sealed door to Room 2? | Cheap to author now, expensive to retrofit |
+None. Both open decisions were answered on 2026-09-05:
 
-`M3-D1` (animation source) is **answered by events**: bundled clips driving a legacy
-`Animation` rig are already in place. The open question is now narrower — whether to
-migrate to an `Animator` controller for real blending (`D-12`).
+| # | Question | Answer |
+|---|---|---|
+| `M4-D1` / `M4-D2` | Class roster | **Three — Warrior (Rage), Mage (Mana), Rogue (Energy). No healer.** `DECISIONS-0008` |
+| `R1-D2` | The chamber's open front | **A sealed door to Room 2, authored now, opened in Phase 4.** `DECISIONS-0009` |
+
+Remaining questions all have stated defaults and are not blocking: `M3-D2` (migrate
+to an `Animator` for real blending), `M4-D3` (abilities per level), `M4-D4` (stat
+differentiation between classes), `Q1-D2`, `Q1-D3`, `R1-D1`, `R1-D3`, `M1-D2`,
+`M1-D3`, `M2-D1`…`M2-D4`.
 
 ---
 
@@ -128,8 +134,10 @@ model in `AGENTS.md`, most of `01-ARCHITECTURE.md`, and every `-N-` requirement.
 
 **Verified:** EditMode 3/3, PlayMode 1/1 on the merged tree. `V-001` closed.
 
-**Next:** `R1-F-004` (brazier art) and `R1-F-008` (authored spawn circle) are the two
-concrete Phase 1 gaps left in the room. `Q1-F-007` (abandon) is the largest quest gap.
+**Next:** three concrete Phase 1 gaps in the room — `R1-F-010`/`R1-F-011`/`R1-A-008`
+(the newly unblocked sealed door), `R1-F-004` (brazier art), and `R1-F-008` (authored
+spawn circle). `Q1-F-007` (abandon) is the largest quest gap. Phase 3 is fully
+specified now but gated behind Phase 2.
 
 **Watch out:** `ClassicContentBuilder.Asset<T>` never overwrites an existing asset, so
 changing a balance number there does nothing to the committed

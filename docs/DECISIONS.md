@@ -133,3 +133,49 @@ audio files. `OathfireVisual` and `TorchFlicker` follow the same read-only patte
 animation code, so `AGENTS.md §3.3` still holds. No root motion, ever: animation must
 not move a character. Keeping ambience procedural avoids a licensing surface and keeps
 the repo small; changing that needs an entry here.
+
+---
+
+## 0008 · 2026-09-05 · Three classes at launch: Warrior, Mage, Rogue
+
+**Context.** `M4-D1` was the blocking decision for Phase 3. The engine already
+implements three genuinely different resource systems (Rage builds by fighting and
+decays; Mana regenerates only out of combat and never while casting; Energy ticks on
+a fixed cadence regardless), and each already has one working seed ability. The
+alternative was a fourth healer class.
+
+**Decision.** Three classes — Warrior (Rage), Mage (Mana), Rogue (Energy). One per
+resource system. No dedicated healer.
+
+Hearthlight, the existing heal, becomes a self-heal every class can reach rather than
+a healer's tool. In a single-player game a dedicated healer has nobody to heal.
+
+**Consequences.**
+- Phase 3 is unblocked and bounded: three ability kits, three animation sets, three
+  silhouettes.
+- Each class ships with a seed ability that already exists and is balanced against
+  the guardians: Heroic Strike, Ember Bolt, Quick Slash.
+- The user framed this as "for now". **Revisit if** group content or multiplayer ever
+  returns (see 0006), at which point a healer earns its place. Adding a fourth class
+  later is additive — `ClassData` is a ScriptableObject and the loadout is data.
+
+---
+
+## 0009 · 2026-09-05 · The chamber's open front becomes a sealed door to Room 2
+
+**Context.** `R1-D2`. The front of the hall (z = +8) is currently a bare invisible
+barrier so the camera can see into the room as a cutaway. The question was whether it
+stays a wall forever or is authored as a door now.
+
+**Decision.** Author it now as a visibly sealed door — real geometry, obviously a
+door, obviously not openable yet. It stays sealed for the whole of Phases 1–3 and
+opens in Phase 4 when Room 2 exists.
+
+**Consequences.**
+- The room reads as part of a larger place rather than a sealed box, which is worth
+  more than the few minutes it costs.
+- No retrofit later: the transition point, its collision, and its framing are fixed
+  now, while the room is the only thing being changed.
+- The door must communicate "not yet", not "broken". A player who walks into it
+  should understand it is content that does not exist yet, not a bug. Tracked as
+  `R1-F-010` / `R1-A-008`.

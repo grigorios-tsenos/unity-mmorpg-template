@@ -57,7 +57,9 @@ Known gaps carried from [../01-ARCHITECTURE.md](../01-ARCHITECTURE.md): `D-02`, 
 | `R1-F-006` | Player placement and respawn use a spawn point authored by `SceneBuilder`, not literals scattered through gameplay code | **Done** — the player is placed by the builder; keep it that way |
 | ~~`R1-F-007`~~ | ~~Multiple players spawning simultaneously never overlap~~ | Withdrawn — single-player. See `DECISIONS-0006` |
 | `R1-F-008` | The guardian spawn circle is authored in the scene, not a literal (`D-02`), and every spawn point is reachable and clear of props | EditMode + Manual R1-M-2 |
-| `R1-F-009` | Toma sells potions and the transaction is server-validated; buying with insufficient copper fails silently and safely | PlayMode: `R1_F_009_MerchantRejectsUnderfundedPurchase` |
+| `R1-F-009` | Toma sells potions and the transaction is validated; buying with insufficient copper fails safely | PlayMode: `R1_F_009_MerchantRejectsUnderfundedPurchase` |
+| `R1-F-010` | The open front of the hall (z = +8) is a **sealed door** with real geometry and collision, not a bare invisible barrier (`DECISIONS-0009`) | EditMode: `R1_F_010_FrontIsASealedDoor` asserts door geometry exists at the boundary and blocks movement |
+| `R1-F-011` | Interacting with the sealed door gives a short line explaining it is shut, rather than doing nothing | PlayMode: `R1_F_011_SealedDoorRespondsToInteract` |
 
 ### Presentation (`A`)
 
@@ -70,6 +72,7 @@ Known gaps carried from [../01-ARCHITECTURE.md](../01-ARCHITECTURE.md): `D-02`, 
 | `R1-A-005` | Mira and Toma face plausible directions and stand on the floor, not in it or above it | EditMode: assert NPC y ≈ floor height ± 0.05 |
 | `R1-A-006` | The west (living) and east (proving) halves read as different places at a glance | Manual R1-M-3 |
 | `R1-A-007` | Quest markers (`!` / `?`) float above NPC heads, always face the camera, and are visible from anywhere in the room | Manual R1-M-4 |
+| `R1-A-008` | The sealed door reads as *content that does not exist yet*, not as a bug or a broken wall — barred, chained, or shuttered, and deliberate | Manual R1-M-6 |
 
 ### Interaction (`N`)
 
@@ -90,7 +93,8 @@ Known gaps carried from [../01-ARCHITECTURE.md](../01-ARCHITECTURE.md): `D-02`, 
 - Animation refinement → [mech-03-animation](mech-03-animation.md)
 - Enemy pathing around furniture → *mech-05-ai-navigation* (Phase 2)
 - Per-action audio on top of the existing ambience → *mech-06-audio-feedback* (Phase 2)
-- Doors, exits, or any second room → Phase 4
+- Room 2 itself, and actually opening the door → Phase 4. This spec authors the
+  sealed door only
 - Quest logic → [quest-01-oathfire-trial](quest-01-oathfire-trial.md)
 
 ## 5. Open decisions
@@ -98,7 +102,7 @@ Known gaps carried from [../01-ARCHITECTURE.md](../01-ARCHITECTURE.md): `D-02`, 
 | # | Question | Options | Blocking? |
 |---|---|---|---|
 | R1-D1 | Does the chamber get a ceiling, or stay open-topped for the cutaway camera? | (a) open — camera never fights geometry, but no overhead light shafts; (b) ceiling with the camera clipping through | No — default (a) |
-| R1-D2 | Is the front (z = +8) an invisible wall forever, or does it become the doorway to Room 2? | (a) permanent wall; (b) authored as a sealed door now, opened in Phase 4 | No — default (b), it costs nothing and saves rework |
+| ~~R1-D2~~ | ~~Invisible wall forever, or the doorway to Room 2?~~ | **Resolved — a sealed door, authored now, opened in Phase 4.** See `DECISIONS-0009`, tracked as `R1-F-010` / `R1-F-011` / `R1-A-008` |
 | R1-D3 | Should the proving circle be visually marked on the floor (inlaid ring, worn stone)? | yes / no | No — default yes; it explains where guardians appear |
 
 ## 6. Verification plan
@@ -130,3 +134,9 @@ Automated: EditMode + PlayMode per the table above, run per
 > **R1-M-5 — performance.**
 > Window ▸ Analysis ▸ Frame Debugger with 4 guardians up: draw calls < 250.
 > Profiler, 60 s idle: 0 B/frame GC allocation attributed to room scripts.
+
+> **R1-M-6 — the sealed door.**
+> Walk up to the front of the hall. The door must look deliberately shut — barred,
+> chained, or shuttered — not like a wall that failed to load. Press `E` on it: you
+> should get a line telling you it is closed, not silence. It must be obvious that
+> something is *through* there, later.

@@ -21,7 +21,7 @@ Start at [../AGENTS.md](../AGENTS.md). Everything else hangs off it.
 | [mech-03-animation](specs/mech-03-animation.md) | 2 | Draft |
 | [mech-01-movement-camera](specs/mech-01-movement-camera.md) | 2 | Draft |
 | [mech-02-combat-gcd](specs/mech-02-combat-gcd.md) | 2 | Draft |
-| [mech-04-classes](specs/mech-04-classes.md) | 3 | Draft — blocked on the roster decision |
+| [mech-04-classes](specs/mech-04-classes.md) | 3 | Roster committed — Warrior / Mage / Rogue |
 | [_TEMPLATE](specs/_TEMPLATE.md) | — | Copy this to start a new spec |
 
 Not yet written, referenced by the roadmap: *mech-05-ai-navigation*,

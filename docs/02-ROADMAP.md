@@ -56,7 +56,8 @@ and every action has an animation and a sound.
 | [mech-04-classes](specs/mech-04-classes.md) | Class identity, resource ownership, the ability-loadout system, talent-free 1.12-style kits |
 
 Depends on Phase 2 because a class is only as good as the combat model under it.
-The roster is an **open decision** — see the spec.
+The roster is **decided**: Warrior (Rage), Mage (Mana), Rogue (Energy), no healer —
+see `DECISIONS-0008`.
 
 **Exit criteria.** Class is chosen at character creation, drives the resource bar and
 the ability loadout from data, and two classes play distinctly different in the same
@@ -69,7 +70,8 @@ fight.
 Only once one room, one questline, the mechanics, and the classes are proven.
 
 - Generalise `QuestData`/`QuestManager` beyond the single hardcoded trial (`D-05`)
-- Zone/room transition framework (doors, load boundaries, per-room spawn tables)
+- Zone/room transition framework (load boundaries, per-room spawn tables) — opening
+  the sealed door authored in Phase 1 (`DECISIONS-0009`)
 - Room 2 authored against the now-proven pipeline
 - Persistence: character save/load (`D-11` — progress currently lasts one session)
 - Multiplayer, if it is ever wanted again: `Archive/Networking/` holds the previous
