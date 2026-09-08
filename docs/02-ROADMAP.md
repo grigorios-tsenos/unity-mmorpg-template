@@ -27,6 +27,10 @@ the single-player rework on `main`: `CharacterVisual` drives idle, movement, mel
 casting and death, and `ChamberAmbience` / `TorchFlicker` / `OathfireVisual` give the
 room life. Phase 2 refines them rather than building them.
 
+**Phase 1 exception.** Quest accept/completion sound feedback and its associated
+toast remain in the vertical slice (`Q1-A-001`); broad per-action combat audio still
+belongs to Phase 2. See `DECISIONS-0010`.
+
 ---
 
 ## Phase 2 — Perfect the mechanics

@@ -179,3 +179,41 @@ opens in Phase 4 when Room 2 exists.
 - The door must communicate "not yet", not "broken". A player who walks into it
   should understand it is content that does not exist yet, not a bug. Tracked as
   `R1-F-010` / `R1-A-008`.
+
+---
+
+## 0010 · 2026-09-08 · Observable 1.12 fidelity directs the private fan project
+
+**Context.** The project needed decisions spanning the vertical slice, mechanics,
+and class design before new systems are authored. Its audience is 2004 WoW veterans;
+the project remains private and is for learning/fan use, not commercial release.
+
+**Decision.** Observable 1.12 behavior is authoritative when memory disagrees, and
+historical WoW feel wins when it conflicts with single-player convenience. A phase is
+not complete until every functional requirement is verified and the owner approves a
+repeatable captured manual walkthrough.
+
+- The Oathfire Chamber uses a selectively cut-away ceiling and a worn proving circle.
+  Quest abandonment is available from the journal only. Quest accept/completion
+  sound and toast feedback is a narrowly scoped Phase 1 exception.
+- Auto-run uses `Num Lock`; the obsolete networking input-send-rate decision is
+  removed. Single-player Phase 2 owns solo aggro/leash, while multi-target threat
+  tables are deferred until companions or multiplayer exist.
+- Combat uses a data-backed, 1.12-inspired attack table with level differences;
+  implementation must record its observable evidence and formulas. The combat log
+  lives in the HUD chat tab. Player interrupt/CC acceptance moves into authentic
+  Phase 3 class kits.
+- Animation migrates to an `Animator`, using one shared controller and per-character
+  `AnimatorOverrideController` assets. This is an explicit authored-controller
+  exception to the generated-content rule.
+- Phase 3 adds session-scoped, historically styled class selection; real data-driven
+  levels 1–5; differentiated base health and armour/mitigation; and fixed class
+  starter loadouts with weapon visuals and baked-in starting effects. Interactive
+  equipment remains Phase 4. Recovery is shared limited-charge healing potions on a
+  shared cooldown, not the mana-only Hearthlight scaffold.
+
+**Consequences.** The active vertical slice must demonstrate its visual and feel
+criteria through a repeatable owner-approved walkthrough. Future implementation must
+author formula sources, balance values, XP thresholds, and class unlock maps as data
+rather than infer them in code. These choices amend the linked specs without marking
+any unbuilt requirement complete.

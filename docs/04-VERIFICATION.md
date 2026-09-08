@@ -115,7 +115,10 @@ them without reading code:
 >    the footstep sound.
 > 3. Strafe left and right with Q/E while holding W — the body leans into the turn.
 
-An agent may not tick a manual criterion. Only the user does, after looking.
+An agent may not tick a manual criterion. Only the user does, after looking. For a
+phase sign-off, run the named walkthrough, capture screenshots or video wherever it
+helps demonstrate the criterion, record the result with the task handoff, and obtain
+the user's explicit approval. See `DECISIONS-0010`.
 
 ---
 

@@ -4,7 +4,7 @@
 
 > **Current milestone:** Phase 1 — the vertical slice
 > **Active specs:** [room-01-oathfire-chamber](specs/room-01-oathfire-chamber.md) · [quest-01-oathfire-trial](specs/quest-01-oathfire-trial.md)
-> **Last updated:** 2026-09-05
+> **Last updated:** 2026-09-08
 
 ---
 
@@ -105,23 +105,20 @@ Found but deliberately not fixed. Each needs a requirement ID before anyone touc
 | `D-12` | Legacy `Animation` component, clip lookup by name, no blending | [mech-03-animation](specs/mech-03-animation.md), Phase 2 |
 | — | Camera snaps rather than eases when occlusion clears | `M1-A-002`, Phase 2 |
 | — | No damage variance, crits, or misses | `M2-F-004`…`M2-F-006`, Phase 2 |
-| — | `PlayerCombat.Stun` exists but nothing calls it | `M2-F-008`, Phase 2 |
+| — | `PlayerCombat.Stun` exists but nothing calls it | `M4-F-011`, Phase 3 class kits |
 
 ---
 
 ## Decisions awaiting the user
 
-None. Both open decisions were answered on 2026-09-05:
+None. The grilling decisions are recorded in `DECISIONS-0010`; no implemented
+requirements were ticked by that documentation task.
 
 | # | Question | Answer |
 |---|---|---|
 | `M4-D1` / `M4-D2` | Class roster | **Three — Warrior (Rage), Mage (Mana), Rogue (Energy). No healer.** `DECISIONS-0008` |
 | `R1-D2` | The chamber's open front | **A sealed door to Room 2, authored now, opened in Phase 4.** `DECISIONS-0009` |
-
-Remaining questions all have stated defaults and are not blocking: `M3-D2` (migrate
-to an `Animator` for real blending), `M4-D3` (abilities per level), `M4-D4` (stat
-differentiation between classes), `Q1-D2`, `Q1-D3`, `R1-D1`, `R1-D3`, `M1-D2`,
-`M1-D3`, `M2-D1`…`M2-D4`.
+| Grilling 1–21 | Fidelity, slice sign-off, room, quest, mechanics, animation, and classes | **Resolved.** See `DECISIONS-0010` and the amended specs. |
 
 ---
 
@@ -143,3 +140,17 @@ specified now but gated behind Phase 2.
 changing a balance number there does nothing to the committed
 `Assets/Resources/RPG/*.asset`. The quest briefing is patched in place as an explicit
 exception — follow that pattern when authored data needs migrating.
+
+### Handoff — 2026-09-08, Codex
+
+**Done:** Recorded the owner's grilling decisions 1–21 in `DECISIONS-0010` and the
+affected Phase 1–3 specs. No gameplay work was performed and no requirement was
+ticked.
+
+**Next:** Finish the current Phase 1 requirements in order. Before Phase 2 combat,
+author and cite the 1.12-inspired combat-table inputs as data (`M2-F-017`). Before
+Phase 3 implementation, author the exact level 1–5 XP thresholds and class unlock
+map as data; they were deliberately not guessed in the decision record.
+
+**Verified:** Documentation links, requirement IDs, and diff only; Unity tests were
+not run because this task changed no runtime code, scenes, prefabs, or content assets.

@@ -13,8 +13,8 @@ an NPC's head, a briefing worth reading, a kill-and-collect objective, a boss, a
 world interaction that visibly changes the room, and a turn-in that hands over gold,
 XP, and an item you keep.
 
-A player who has never seen the game should be able to finish it without being told
-anything, and a player who played WoW in 2004 should recognise every beat.
+A player who played WoW in 2004 should recognise every beat from observable 1.12
+behavior, without needing to read the code.
 
 ## 2. Current state
 
@@ -65,7 +65,7 @@ journal is functional but sparse.
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| `Q1-A-001` | Accepting the quest plays an accept sound and a brief toast; completing plays a distinct, more triumphant one | Manual Q1-M-3. Ambience exists (`ChamberAmbience`); per-action audio is Phase 2 |
+| `Q1-A-001` | Accepting the quest plays an accept sound and a brief toast; completing plays a distinct, more triumphant one | Manual Q1-M-3. This narrowly scoped quest feedback is a Phase 1 exception; broad per-action combat audio remains Phase 2. See `DECISIONS-0010` |
 | `Q1-A-002` | Objective progress updates visibly in the tracker the instant it changes — count animates or flashes, never silently increments | Manual Q1-M-1 |
 | `Q1-A-003` | The dialogue window uses the parchment style, types the briefing in rather than snapping it on, and can be skipped with a click | Manual Q1-M-2 |
 | `Q1-A-004` | Lighting the Oathfire is a visible event in the room — the brazier ignites, the room warms, everyone present sees it at once | Manual Q1-M-1, and `R1-F-005` |
@@ -99,7 +99,7 @@ journal is functional but sparse.
 | # | Question | Options | Blocking? |
 |---|---|---|---|
 | ~~Q1-D1~~ | ~~Shared party progress or per-player?~~ | Resolved by the single-player rework — there is one player |
-| Q1-D2 | Is quest abandon reachable from the journal, from Mira's dialogue, or both? | journal / dialogue / both | No — default both |
+| ~~Q1-D2~~ | ~~Is quest abandon reachable from the journal, from Mira's dialogue, or both?~~ | **Resolved — journal only.** See `DECISIONS-0010` |
 | Q1-D3 | Does the warden need a mechanic beyond a bigger health pool (a knockback, an enrage, adds)? | none / one telegraphed ability | No — default one telegraphed ability, specified in `mech-02` once combat is proven |
 
 ## 6. Verification plan
@@ -119,6 +119,6 @@ regression net for this quest. New tests use the `Q1_*` naming from §3.
 > be legible, parchment-styled, and complete. On turn-in, the reward panel must show
 > the item, the coin split, and the XP.
 
-> **Q1-M-3 — celebration.** *(after Phase 2 per-action audio)*
+> **Q1-M-3 — celebration.**
 > Accept and complete the quest. Both moments must sound and feel distinct, and
 > lighting the Oathfire must be the most dramatic beat in the room.

@@ -50,7 +50,7 @@ reaction and no jump animation.
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| `M3-F-001` | Character prefabs carry a rig with blending and transition control — an `Animator` controller, or a justified reason the legacy `Animation` component stays | EditMode: `M3_F_001_CharacterPrefabsHaveAnimationRig` |
+| `M3-F-001` | Character prefabs carry an `Animator` rig with blending and transition control | EditMode: `M3_F_001_CharacterPrefabsHaveAnimationRig` |
 | `M3-F-002` | Locomotion blends idle → walk → run from actual horizontal velocity, not from the input vector | PlayMode: `M3_F_002_LocomotionFollowsVelocity` |
 | `M3-F-003` | A missing or renamed clip fails loudly (a logged warning naming the clip) rather than silently doing nothing | EditMode: `M3_F_003_MissingClipIsReported` |
 | `M3-F-004` | Jump has distinct take-off, airborne, and land states, driven by `CharacterController.isGrounded` | Manual M3-M-1 |
@@ -89,8 +89,8 @@ reaction and no jump animation.
 | # | Question | Options | Blocking? |
 |---|---|---|---|
 | ~~M3-D1~~ | ~~Which animation source?~~ | Resolved by events — bundled clips on the existing character models are already wired |
-| M3-D2 | Migrate from the legacy `Animation` component to an `Animator` controller for real blending (`D-12`)? | (a) migrate — proper blend trees and transition control; (b) stay legacy and hand-roll crossfades | No — default (a). If (a), the controller is an authored `.controller` asset, a deliberate exception to the "generate everything" rule needing a `DECISIONS.md` entry |
-| M3-D3 | Do enemies and players share one controller with different clips, or get separate controllers? | shared / separate | No — default shared, overridden per character with an `AnimatorOverrideController` |
+| ~~M3-D2~~ | ~~Migrate from the legacy `Animation` component to an `Animator` controller for real blending (`D-12`)?~~ | **Resolved — migrate.** The authored controller is an explicit generated-content exception recorded in `DECISIONS-0010` |
+| ~~M3-D3~~ | ~~Do enemies and players share one controller with different clips, or get separate controllers?~~ | **Resolved — shared controller with `AnimatorOverrideController` per character.** See `DECISIONS-0010` |
 
 ## 6. Verification plan
 

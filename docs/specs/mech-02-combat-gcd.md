@@ -65,12 +65,13 @@ the UI; no facing requirement; no combat log.
 | `M2-F-004` | Damage has variance (a low–high range per ability) rather than a single fixed number | EditMode: `M2_F_004_AbilitiesHaveDamageRange` — **needs `SpellData` fields `powerMin`/`powerMax`** |
 | `M2-F-005` | Attacks can critically strike for double damage, shown distinctly in floating combat text | PlayMode + Manual M2-M-2 |
 | `M2-F-006` | Attacks can miss, and a miss is communicated ("Miss", not a silent nothing) | PlayMode: `M2_F_006_MissIsReportedNotSilent` |
-| `M2-F-007` | An enemy maintains a threat table; the highest-threat player is the target, not merely the most recent attacker | PlayMode: `M2_F_007_ThreatTableSelectsTarget` |
-| `M2-F-008` | The player has at least one interrupt or crowd-control ability, and `PlayerCombat.Stun` is actually reachable from gameplay | PlayMode: `M2_F_008_PlayerCanInterrupt` |
+| `M2-F-007` | An enemy acquires the solo player by valid aggro, chases only while leashed, and drops combat and returns home when leashed | PlayMode: `M2_F_007_SoloAggroAndLeash` — real multi-target threat is deferred until companions or multiplayer exist. See `DECISIONS-0010` |
+| ~~M2-F-008~~ | ~~The player has at least one interrupt or crowd-control ability, and `PlayerCombat.Stun` is actually reachable from gameplay~~ | Moved to `M4-F-011`: authentic player interrupt tools belong to class kits. See `DECISIONS-0010` |
 | `M2-F-009` | Damage requires facing the target within a tolerance cone | PlayMode: `M2_F_009_CannotAttackBehindYou` |
 | `M2-F-010` | Line of sight is required and is broken by pillars and walls, not by other characters | Already implemented; add `M2_F_010_LosBlockedByPillarNotByPlayer` |
 | `M2-F-011` | Leashing enemies are untargetable, deal no damage, and fully heal at home | Already implemented; assert it |
 | `M2-F-012` | A combat log records every swing, cast, hit, miss, and death with amounts | Manual M2-M-3 — **new** |
+| `M2-F-017` | Combat-outcome ordering, formulas, and data inputs are recorded from observable 1.12 evidence before balance values are authored | EditMode: `M2_F_017_CombatTableDataIsComplete` validates every required table input is data-backed; sources and formula notes are reviewed manually |
 
 ### Resources (`F`, continued)
 
@@ -111,10 +112,10 @@ the UI; no facing requirement; no combat log.
 
 | # | Question | Options | Blocking? |
 |---|---|---|---|
-| M2-D1 | How faithful is the hit table? | (a) simple: hit/crit/miss; (b) full 1.12: miss, dodge, parry, block, glancing, crush | No — default (a) now, (b) is a Phase 4 refinement |
-| M2-D2 | Does the player character have a level-vs-enemy-level modifier on hit chance? | yes / no | No — default no until levelling has content behind it |
-| M2-D3 | Threat model | (a) simple damage-summed table; (b) 1.12 threat with modifiers and a 110%/130% pull threshold | No — default (a); (b) only matters with real tanking roles |
-| M2-D4 | Where does the combat log live? | HUD chat tab / separate window / both | No — default a chat tab, matching 2004 |
+| ~~M2-D1~~ | ~~How faithful is the hit table?~~ | **Resolved — 1.12-inspired attack table** with observable 1.12 behavior as the authority. It includes the applicable table outcomes and their ordering rather than a simplified hit/crit/miss roll. See `DECISIONS-0010` |
+| ~~M2-D2~~ | ~~Does the player character have a level-vs-enemy-level modifier on hit chance?~~ | **Resolved — yes.** Level is a data-backed input to the 1.12-inspired table. See `DECISIONS-0010` |
+| ~~M2-D3~~ | ~~Threat model~~ | **Resolved — defer real threat tables** until companions or multiplayer create multiple valid targets. Phase 2 owns solo aggro and leash only. See `DECISIONS-0010` |
+| ~~M2-D4~~ | ~~Where does the combat log live?~~ | **Resolved — HUD chat tab.** See `DECISIONS-0010` |
 
 ## 6. Verification plan
 

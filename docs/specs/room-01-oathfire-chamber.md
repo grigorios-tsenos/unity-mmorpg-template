@@ -101,9 +101,9 @@ Known gaps carried from [../01-ARCHITECTURE.md](../01-ARCHITECTURE.md): `D-02`, 
 
 | # | Question | Options | Blocking? |
 |---|---|---|---|
-| R1-D1 | Does the chamber get a ceiling, or stay open-topped for the cutaway camera? | (a) open — camera never fights geometry, but no overhead light shafts; (b) ceiling with the camera clipping through | No — default (a) |
+| ~~R1-D1~~ | ~~Does the chamber get a ceiling, or stay open-topped for the cutaway camera?~~ | **Resolved — selectively cut away the ceiling.** The room remains enclosed at its perimeter while the playable camera volume stays clear. See `DECISIONS-0010` |
 | ~~R1-D2~~ | ~~Invisible wall forever, or the doorway to Room 2?~~ | **Resolved — a sealed door, authored now, opened in Phase 4.** See `DECISIONS-0009`, tracked as `R1-F-010` / `R1-F-011` / `R1-A-008` |
-| R1-D3 | Should the proving circle be visually marked on the floor (inlaid ring, worn stone)? | yes / no | No — default yes; it explains where guardians appear |
+| ~~R1-D3~~ | ~~Should the proving circle be visually marked on the floor (inlaid ring, worn stone)?~~ | **Resolved — yes: a worn proving circle.** See `DECISIONS-0010` |
 
 ## 6. Verification plan
 

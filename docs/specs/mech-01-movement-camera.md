@@ -55,7 +55,7 @@ camera occlusion smoothing — the camera snaps when occlusion clears.
 | `M1-F-006` | Both mouse buttons held runs forward | PlayMode: `M1_F_006_BothButtonsRunForward` |
 | `M1-F-007` | Jump preserves horizontal momentum for the whole arc and cannot be steered mid-air | PlayMode: `M1_F_007_AirMomentumIsLocked` |
 | `M1-F-008` | Jumping is impossible while airborne (no double jump, no bunny-hop speed gain) | PlayMode: `M1_F_008_NoDoubleJump` |
-| `M1-F-009` | Auto-run toggles on a key and cancels on any backward input | PlayMode: `M1_F_009_AutoRunTogglesAndCancels` — **new** |
+| `M1-F-009` | Auto-run toggles on `Num Lock` and cancels on any backward input | PlayMode: `M1_F_009_AutoRunTogglesAndCancels` — **new** |
 | `M1-F-010` | Movement is blocked while dead, stunned, or while the HUD holds focus | Already implemented; add `M1_F_010_InputBlockedStates` |
 | `M1-F-011` | The character cannot climb a wall by holding forward into it, and slope limit produces sensible behaviour on stairs and prop edges | Manual M1-M-2 |
 
@@ -96,8 +96,8 @@ camera occlusion smoothing — the camera snaps when occlusion clears.
 | # | Question | Options | Blocking? |
 |---|---|---|---|
 | ~~M1-D1~~ | ~~Where does strafe-right go?~~ | Resolved: `Q`/`R` strafe, `E` stays interact. `R` is not 2004-accurate but avoids the collision; revisit if rebinding lands |
-| M1-D2 | Auto-run key | `Num Lock` (2004-accurate) / `R` / user-configurable | No — default configurable, shipping with `R` |
-| M1-D3 | Should input send rate stay at 20 Hz? | 20 / 30 / 60 | No — default 20 until `M1-P-001` measures otherwise |
+| ~~M1-D2~~ | ~~Auto-run key~~ | **Resolved — `Num Lock`.** `R` remains strafe-right; this avoids the collision and follows the historical default. See `DECISIONS-0010` |
+| ~~M1-D3~~ | ~~Should input send rate stay at 20 Hz?~~ | **Removed.** Input send rate was networking residue and has no single-player meaning. Local input is sampled at the game's normal update/simulation cadence. See `DECISIONS-0010` |
 
 ## 6. Verification plan
 

@@ -44,16 +44,17 @@ GCD, and the HFSM-driven cast/stun states.
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| `M4-F-001` | A `ClassData` ScriptableObject defines a class: display name, description, resource type, starting ability loadout, base health, health/level, and starting equipment | EditMode: `M4_F_001_EveryClassAssetIsComplete` validates all class assets |
-| `M4-F-002` | Class is chosen at character creation and persists for the character | PlayMode: `M4_F_002_ClassPersistsAcrossRespawn` |
+| `M4-F-001` | A `ClassData` ScriptableObject defines a class: display name, description, resource type, starting ability loadout, base health, health/level, base armour/mitigation, and a fixed starter loadout (weapon visual plus baked-in starting-stat effects) | EditMode: `M4_F_001_EveryClassAssetIsComplete` validates all class assets |
+| `M4-F-002` | Class is chosen on a historically styled pre-play class-selection screen and persists across respawns for that play session | PlayMode: `M4_F_002_ClassPersistsAcrossRespawn` and `M4_F_002_ClassSelectionInitializesSession` |
 | `M4-F-003` | `PlayerCombat` loads its ability loadout from `ClassData`, not from a hardcoded name array | EditMode: `M4_F_003_LoadoutComesFromClassData` |
 | `M4-F-004` | Resource type is owned by the class and cannot be switched at runtime; the training toggle is removed or restricted to debug builds | PlayMode: `M4_F_004_ResourceTypeIsImmutable` |
 | `M4-F-005` | Each class has at least four usable abilities plus auto-attack, all reachable from the action bar | EditMode: `M4_F_005_ClassHasFullBar` |
 | `M4-F-009` | Exactly three classes exist — Warrior, Mage, Rogue — each owning a different `ResourceType` | EditMode: `M4_F_009_ThreeClassesOneResourceEach` |
-| `M4-F-010` | Every class can reach a self-heal; its cost works for that class's resource | EditMode: `M4_F_010_SelfHealIsReachableByAllClasses` |
+| `M4-F-010` | Every class can use the shared healing-potion consumable; it has limited charges and a shared cooldown, independent of class resource | EditMode: `M4_F_010_HealingPotionIsReachableByAllClasses` |
 | `M4-F-006` | Abilities unlock by level, so a level 1 character does not start with everything | PlayMode: `M4_F_006_AbilitiesUnlockByLevel` |
 | `M4-F-007` | Each class can complete the Oathfire Trial solo | PlayMode: `M4_F_007_EveryClassCanSoloTheTrial` — one run per class |
 | `M4-F-008` | The HUD resource bar colours and labels itself from the class's resource type | Manual M4-M-2 |
+| `M4-F-011` | Each class has an authentic interrupt or crowd-control tool; `PlayerCombat.Stun` is reachable only through a class loadout | PlayMode: `M4_F_011_ClassInterruptIsReachable` |
 
 ### Design (`A`)
 
@@ -73,7 +74,7 @@ GCD, and the HFSM-driven cast/stun states.
 ## 4. Out of scope
 
 - Talents, specialisations, and talent trees → Phase 4 at the earliest
-- Gear, stat scaling, and itemisation → Phase 4
+- Interactive gear, stat scaling, and itemisation → Phase 4. Fixed starter loadouts and base class defense are Phase 3 class data, not an equipment system.
 - Class quests and trainers → Phase 4
 - A fourth class or a dedicated healer → revisit only per `DECISIONS-0008`
 
@@ -84,9 +85,9 @@ GCD, and the HFSM-driven cast/stun states.
 | # | Question | Outcome |
 |---|---|---|
 | `M4-D1` | The launch class roster | **Three** — Warrior (Rage), Mage (Mana), Rogue (Energy). One per resource system |
-| `M4-D2` | A healer at launch? | **No.** Single-player: a dedicated healer has nobody to heal. Hearthlight becomes a self-heal every class can reach |
-| `M4-D3` | Abilities per class at level 1 vs. the cap the trial reaches | Open — default staged unlock, 2 at L1 rising to 5. Not blocking |
-| `M4-D4` | Do classes differ in base health and armour, or only in abilities? | Open — default full differentiation. A mage as tough as a warrior has no fantasy. Not blocking |
+| `M4-D2` | A healer at launch? | **No.** Single-player: a dedicated healer has nobody to heal. Recovery is a shared healing-potion consumable, not a class heal. See `DECISIONS-0010` |
+| ~~M4-D3~~ | ~~Abilities per class at level 1 vs. the cap the trial reaches~~ | **Resolved — real data-driven levels 1–5.** Abilities unlock through that progression; a development selector may assist tests but is not player progression. Exact thresholds and unlock map are authored balance data before implementation. See `DECISIONS-0010` |
+| ~~M4-D4~~ | ~~Do classes differ in base health and armour, or only in abilities?~~ | **Resolved — full base-health and base-armour/mitigation differentiation in `ClassData`.** See `DECISIONS-0010` |
 
 The roster was chosen "for now": it is the smallest set that proves the system, and
 adding a fourth class later is additive because the loadout is data. Revisit if group
@@ -104,10 +105,10 @@ against the guardians.
 | **Mage** | Mana | Big slow casts that break if you move. The bar refills only once the fighting stops, so every pull is a budget. Cannot afford to be hit | Ember Bolt (2.2 s cast, 18 mana, 40 power) |
 | **Rogue** | Energy | Small constant ticks regardless of combat. Never empty, never rich — the constraint is *right now*, not the whole fight | Quick Slash (instant, 40 energy, 30 power) |
 
-Hearthlight (2 s cast, 25 mana, 50 healing) is currently mana-costed, which does not
-work for a Warrior or a Rogue. Making it a shared self-heal needs either a per-class
-cost or a resource-free cooldown — resolve that when `M4-F-003` is implemented, and
-note the outcome here.
+Hearthlight is scaffold-only and is not part of any final class loadout. Recovery is
+a shared healing-potion consumable with limited charges and a shared cooldown. Fixed
+starter loadouts provide each class's weapon visual and baked-in starting-stat effects
+without exposing an inventory or equip UI before Phase 4.
 
 ## 6. Verification plan
 
